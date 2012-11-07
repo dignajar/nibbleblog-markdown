@@ -17,7 +17,7 @@ else
 }
 
 $last_post = $posts[0];
-$updated = $_DATE->atom($last_post['pub_date']);
+$updated = $_DATE->atom($last_post['pub_date_unix']);
 
 // ============================================================================
 // ATOM Feed
@@ -48,14 +48,12 @@ foreach($posts as $post)
 			$title = htmlspecialchars($post['type'], ENT_QUOTES, 'UTF-8');
 		}
 
-		$content = htmlspecialchars($post['content_part0'], ENT_QUOTES, 'UTF-8');
-
-
+		$content = htmlspecialchars($post['content'][1], ENT_QUOTES, 'UTF-8');
 	}
 
 	$full_link = htmlspecialchars($settings['url'].$post['permalink']);
 
-	$date = $_DATE->atom($post['pub_date']);
+	$date = $_DATE->atom($post['pub_date_unix']);
 
 	// Entry
 	$rss.= '<entry>' . PHP_EOL;
