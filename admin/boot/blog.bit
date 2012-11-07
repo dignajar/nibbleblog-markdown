@@ -1,0 +1,181 @@
+<?php
+
+// ============================================================================
+//	INCLUDES
+// ============================================================================
+	require('init/1-fs_php.bit');
+	require('init/2-objects.bit');
+	require('init/3-variables.bit');
+	require('init/10-regional.bit');
+	require('init/10-url.bit');
+	require('init/10-constants.bit');
+
+// ============================================================================
+// VARIABLES
+// ============================================================================
+	// Theme info
+	$theme = array();
+
+	// Waching post filter by category
+	if($_URL['category']!=null)
+	{
+		// Category ID
+		$id_cat = $_DB_CATEGORIES->get_id( array('name'=>$_URL['category']) );
+
+		// Posts by category
+		$posts = $_DB_POST->get_list_by_category( array('page'=>$_URL['page'], 'amount'=>$settings['items_page'], 'id_cat'=>$id_cat) );
+	}
+	// Waching one particular post
+	elseif($_URL['id_post']!=null)
+	{
+		// The post
+		$post = $_DB_POST->get( array('id'=>$_URL['id_post']) );
+
+		// Comments for this post
+		$comments = $_DB_COMMENTS->get_list_by_post( array('id_post'=>$_URL['id_post']) );
+	}
+	// Waching the blog
+	else
+	{
+		// Posts by page
+		$posts = $_DB_POST->get_list_by_page( array('page'=>$_URL['page'], 'amount'=>$settings['items_page']) );
+	}
+
+	// Pager
+	$pager_next = $_URL['page'] + 1;
+	$pager_prev = $_URL['page'] - 1;
+
+	if($settings['friendly_urls'])
+	{
+		if($_URL['category']!=null)
+		{
+			$href_older = HTML_PATH_ROOT.'category/'.$_URL['category'].'/page-'.$pager_next;
+			$href_newer = HTML_PATH_ROOT.'category/'.$_URL['category'].'/page-'.$pager_prev;
+		}
+		else
+		{
+			$href_older = HTML_PATH_ROOT.'page-'.$pager_next;
+			$href_newer = HTML_PATH_ROOT.'page-'.$pager_prev;
+		}
+	}
+	else
+	{
+		if($_URL['category']!=null)
+		{
+			$href_older = HTML_PATH_ROOT.'index.php?controller=blog&action=view&category='.$_URL['category'].'&page='.$pager_next;
+			$href_newer = HTML_PATH_ROOT.'index.php?controller=blog&action=view&category='.$_URL['category'].'&page='.$pager_prev;
+		}
+		else
+		{
+			$href_older = HTML_PATH_ROOT.'index.php?controller=blog&action=view&page='.$pager_next;
+			$href_newer = HTML_PATH_ROOT.'index.php?controller=blog&action=view&page='.$pager_prev;
+		}
+	}
+
+	$show_older = ((int)ceil($_DB_POST->get_count() / $settings['items_page']) - 1) > $_URL['page'];
+	$show_newer = $_URL['page'] > 0;
+
+	$pager = array(
+						'next'=>$pager_next,
+						'prev'=>$pager_prev,
+						'href_older'=>$href_older,
+						'href_newer'=>$href_newer,
+						'show_older'=>$show_older,
+						'show_newer'=>$show_newer
+	);
+
+// ============================================================================
+//	PLUGINS
+// ============================================================================
+	$plugins_on_system = $_DB_SETTINGS->get_plugins_on_system();
+
+	$plugins = array();
+
+	foreach($plugins_on_system as $dir_name)
+	{
+		include_once(PATH_PLUGINS.$dir_name.'/plugin.bit');
+		$class = 'PLUGIN_'.strtoupper($dir_name);
+		$plugins[$dir_name] = new $class;
+
+		if($plugins[$dir_name]->is_installed())
+		{
+			// Language
+			if( @!include(PATH_PLUGINS.$dir_name.'/languages/'.$settings['language'].'.bit') )
+				include(PATH_PLUGINS.$dir_name.'/languages/en_US.bit');
+
+			$plugins[$dir_name]->set_attributes(
+			array(
+				'name'=>$_PLUGIN_CONFIG['LANG']['name'],
+				'description'=>$_PLUGIN_CONFIG['LANG']['description'],
+				'author'=>$_PLUGIN_CONFIG['DATA']['author'],
+				'version'=>$_PLUGIN_CONFIG['DATA']['version'],
+				'url'=>$_PLUGIN_CONFIG['DATA']['url'],
+				'display'=>isset($_PLUGIN_CONFIG['DATA']['display'])?false:true
+			));
+
+			// Init DB
+			$plugins[$dir_name]->init_db();
+		}
+		else
+		{
+			unset($plugins[$dir_name]);
+		}
+	}
+
+// ============================================================================
+// SESSION
+// ============================================================================
+	if( !isset($_SESSION['nibbleblog']) )
+	{
+		$_SESSION['nibbleblog'] = array('error'=>false, 'id_post'=>$_URL['id_post'], 'alert'=>'', 'captcha'=>'', 'comment_name'=>'', 'comment_email'=>'', 'comment_content'=>'');
+	}
+	elseif(($_SESSION['nibbleblog']['error']==false) or ($_SESSION['nibbleblog']['id_post']!=$_URL['id_post']) )
+	{
+		$_SESSION['nibbleblog']['error'] = false;
+		$_SESSION['nibbleblog']['alert'] = '';
+		$_SESSION['nibbleblog']['comment_name'] = '';
+		$_SESSION['nibbleblog']['comment_email'] = '';
+		$_SESSION['nibbleblog']['comment_content'] = '';
+		$_SESSION['nibbleblog']['id_post'] = $_URL['id_post'];
+	}
+
+	if( $_SERVER['REQUEST_METHOD'] == 'POST' )
+	{
+		$_SESSION['nibbleblog']['comment_name'] = $_VALIDATION->sanitize_html($_POST['name']);
+		$_SESSION['nibbleblog']['comment_email'] = $_VALIDATION->sanitize_html($_POST['email']);
+		$_SESSION['nibbleblog']['comment_content'] = $_VALIDATION->sanitize_html($_POST['content']);
+	}
+
+// ============================================================================
+// MARKDOWN
+// ============================================================================
+require(PATH_KERNEL.'markdown.bit');
+
+function unmark($post)
+{
+	$post['content'] = Markdown($post['content']);
+	$post['content_part0'] = Markdown($post['content_part0']);
+
+	if(isset($post['content_part1']))
+	{
+		$post['content_part1'] = Markdown($post['content_part1']);
+	}
+
+	return $post;
+}
+
+if(isset($posts))
+{
+	$posts_tmp = array();
+	foreach($posts as $post)
+	{
+		array_push($posts_tmp, unmark($post));
+	}
+	$posts = $posts_tmp;
+}
+elseif(isset($post))
+{
+	$post = unmark($post);
+}
+
+?>

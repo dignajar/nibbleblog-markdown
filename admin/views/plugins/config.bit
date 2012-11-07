@@ -1,0 +1,17 @@
+<?php
+
+	echo $_HTML->form_open( array('id'=>'js_form', 'name'=>'form', 'method'=>'post', 'class'=>'plugins') );
+
+		echo $_HTML->input( array('name'=>'plugin', 'type'=>'hidden', 'value'=>$_URL['plugin']) );
+
+		echo $html;
+
+	echo $_HTML->form_close();
+
+?>
+
+<?php
+	$ajax['url'] = HTML_PATH_ADMIN_AJAX.'plugins.php';
+	$ajax['action'] = 'set';
+	include(PATH_ADMIN_JS.'ajax_form.bit');
+?>

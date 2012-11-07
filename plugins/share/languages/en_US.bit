@@ -1,0 +1,9 @@
+<?php
+
+$_PLUGIN_CONFIG['LANG'] = array(
+	'name'=>'Share',
+	'description'=>'Display share buttons for Google+, Twitter and Facebook.'
+);
+
+
+?>
