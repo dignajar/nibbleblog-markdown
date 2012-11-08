@@ -2,6 +2,7 @@
 header("Content-type: text/xml");
 
 require('admin/boot/feed.bit');
+require('admin/kernel/markdown.bit');
 
 $settings = $_DB_SETTINGS->get();
 
@@ -35,7 +36,7 @@ foreach($posts as $post)
 	if($post['type']=='quote')
 	{
 		$title = 'quote';
-		$content = htmlspecialchars($post['quote'], ENT_QUOTES, 'UTF-8');
+ 		$content = strip_tags(Markdown($post['quote']));
 	}
 	else
 	{
@@ -47,8 +48,8 @@ foreach($posts as $post)
 		{
 			$title = htmlspecialchars($post['type'], ENT_QUOTES, 'UTF-8');
 		}
-
-		$content = htmlspecialchars($post['content'][1], ENT_QUOTES, 'UTF-8');
+		
+		$content = strip_tags(Markdown($post['content'][1]]));
 	}
 
 	$full_link = htmlspecialchars($settings['url'].$post['permalink']);
