@@ -153,13 +153,13 @@ require(PATH_KERNEL.'markdown.bit');
 
 function unmark($post)
 {
-	$post['content'] = Markdown($post['content']);
-	$post['content_part0'] = Markdown($post['content_part0']);
+	$post['content'][0] = Markdown($post['content'][0]);
+	$post['content'][1] = Markdown($post['content'][1]);
 
-	if(isset($post['content_part1']))
-	{
-		$post['content_part1'] = Markdown($post['content_part1']);
-	}
+	if(isset($post['content'][2]))
+  {
+		$post['content'][2] = Markdown($post['content'][2]);
+  }
 
 	return $post;
 }
@@ -176,6 +176,10 @@ if(isset($posts))
 elseif(isset($post))
 {
 	$post = unmark($post);
+  
+  foreach($comments as $key => $value) {
+    $comments[$key]['content'] = Markdown($value['content']);
+  }
 }
 
 ?>
