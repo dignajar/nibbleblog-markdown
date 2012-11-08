@@ -176,6 +176,10 @@ if(isset($posts))
 elseif(isset($post))
 {
 	$post = unmark($post);
+  
+  foreach($comments as $key => $value) {
+    $comments[$key]['content'] = Markdown($value['content']);
+  }
 }
 
 ?>
