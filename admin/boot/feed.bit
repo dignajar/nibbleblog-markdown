@@ -14,4 +14,32 @@
 
 $posts = $_DB_POST->get_list_by_page( array('page'=>0, 'amount'=>$settings['items_rss']) );
 
+// ============================================================================
+// MARKDOWN
+// ============================================================================
+require(PATH_KERNEL.'markdown.bit');
+
+function unmark($post)
+{
+	$post['content'][0] = Markdown($post['content'][0]);
+	$post['content'][1] = Markdown($post['content'][1]);
+
+	if(isset($post['content'][2]))
+	{
+		$post['content'][2] = Markdown($post['content'][2]);
+	}
+
+	return $post;
+}
+
+if(isset($posts))
+{
+	$posts_tmp = array();
+	foreach($posts as $post)
+	{
+		array_push($posts_tmp, unmark($post));
+	}
+	$posts = $posts_tmp;
+}
+
 ?>

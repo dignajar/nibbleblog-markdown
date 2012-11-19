@@ -23,8 +23,7 @@
 
 			// CONTENT
 			echo Html::div_open( array('class'=>'form_block') );
-				echo Html::textarea( array('id'=>'js_content', 'name'=>'content', 'content'=>'', 'class'=>'wysiwyg') );
-				echo Html::link( array('content'=>'HTML', 'class'=>'toggle_button', 'href'=>'javascript:;', 'onclick'=>'tinymce.execCommand(\'mceToggleEditor\',false,\'js_content\')', 'hidden'=>( !$settings['advanced_post_options'] || !$settings['enable_wysiwyg'] )) );
+				echo Html::textarea( array('id'=>'js_content', 'name'=>'content', 'content'=>'', 'class'=>'wysiwyg', 'placeholder'=>$_LANG['YOU_CAN_USE_HTML_OR_MARKDOWN_SYNTAX']) );
 			echo Html::div_close();
 
 			// SEO DESCRIPTION
