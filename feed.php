@@ -2,11 +2,6 @@
 header("Content-type: text/xml");
 
 require('admin/boot/feed.bit');
-require('admin/kernel/markdown.bit');
-
-$settings = $_DB_SETTINGS->get();
-
-$posts = $_DB_POST->get_list_by_page( array('page'=>0, 'amount'=>$settings['items_rss']) );
 
 if($settings['friendly_urls'])
 {
@@ -18,7 +13,7 @@ else
 }
 
 $last_post = $posts[0];
-$updated = $_DATE->atom($last_post['pub_date_unix']);
+$updated = Date::atom($last_post['pub_date_unix']);
 
 // ============================================================================
 // ATOM Feed
@@ -36,11 +31,11 @@ foreach($posts as $post)
 	if($post['type']=='quote')
 	{
 		$title = 'quote';
- 		$content = strip_tags(Markdown($post['quote']));
+		$content = htmlspecialchars($post['quote'], ENT_QUOTES, 'UTF-8');
 	}
 	else
 	{
-		if($_TEXT->not_empty($post['title']))
+		if(Text::not_empty($post['title']))
 		{
 			$title = htmlspecialchars($post['title'], ENT_QUOTES, 'UTF-8');
 		}
@@ -48,13 +43,13 @@ foreach($posts as $post)
 		{
 			$title = htmlspecialchars($post['type'], ENT_QUOTES, 'UTF-8');
 		}
-		
-		$content = strip_tags(Markdown($post['content'][1]]));
+
+		$content = htmlspecialchars($post['content'][1], ENT_QUOTES, 'UTF-8');
 	}
 
 	$full_link = htmlspecialchars($settings['url'].$post['permalink']);
 
-	$date = $_DATE->atom($post['pub_date_unix']);
+	$date = Date::atom($post['pub_date_unix']);
 
 	// Entry
 	$rss.= '<entry>' . PHP_EOL;
