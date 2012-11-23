@@ -5,7 +5,7 @@
  * http://www.nibbleblog.com
  * Author Diego Najar
 
- * Last update: 15/07/2012
+ * Last update: 23/11/2012
 
  * All Nibbleblog code is released under the GNU General Public License.
  * See COPYRIGHT.txt and LICENSE.txt.
@@ -129,7 +129,7 @@ class DB_CATEGORIES {
 		{
 			foreach($this->obj_xml as $children)
 			{
-				if(Text::clean_url((string)$children->attributes()->name) == $args['name'])
+				if(Text::clean_url(utf8_decode((string)$children->attributes()->name)) == $args['name'])
 					return( (int)$children->attributes()->id );
 			}
 
