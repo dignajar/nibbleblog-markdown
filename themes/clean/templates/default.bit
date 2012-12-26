@@ -35,28 +35,27 @@
 	<div id="container">
 
 		<header id="head">
+			<a class="name" href="<?php echo HTML_PATH_ROOT ?>">
+				<?php echo $settings['name'] ?>
+				<span class="slogan">
+					<?php echo $settings['slogan'] ?>
+				</span>
+			</a>
+		</header>
 
-			<div class="top">
-				<a class="name" href="<?php echo HTML_PATH_ROOT ?>">
-					<?php echo $settings['name'] ?>
-					<span class="slogan">
-						<?php echo $settings['slogan'] ?>
-					</span>
-				</a>
-			</div>
-
+		<section id="plugins">
 			<?php
-				// if the plugin twitter installed
-				if( isset($plugins_by_name['twitter']) )
+				foreach($plugins as $plugin)
 				{
-					echo '<div class="bottom">';
-						echo '<div class="plugin_box '.$plugins_by_name['twitter']->get_slug_name().'">';
-							echo $plugins_by_name['twitter']->get_html();
+					if($plugin->display())
+					{
+						echo '<div class="plugin_box '.$plugin->get_slug_name().'">';
+							echo $plugin->get_html();
 						echo '</div>';
-					echo '</div>';
+					}
 				}
 			?>
-		</header>
+		</section>
 
 		<section id="main">
 			<?php include(THEME_VIEWS . $layout['view']); ?>
