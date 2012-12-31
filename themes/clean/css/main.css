@@ -253,6 +253,7 @@ div.plugin_twitter {
 	border-bottom: 1px solid #f1f1f1;
 	height: 58px;
 	line-height: 58px;
+	overflow: hidden;
 }
 
 div.plugin_twitter	ul {
