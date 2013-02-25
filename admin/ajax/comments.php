@@ -10,6 +10,31 @@ if( $_POST['action']=='delete' )
 
 	$error = !$_DB_COMMENTS->delete($safe);
 }
+elseif( $_POST['action']=='set' )
+{
+	parse_str($_POST['serial_data'], $data);
+
+	foreach( $data as $name=>$value )
+	{
+		$safe[$name] = Validation::sanitize_html($value);
+	}
+
+	$_DB_COMMENTS->set_settings($safe);
+
+	$error = !$_DB_COMMENTS->savetofile();
+}
+elseif( $_POST['action']=='approve' )
+{
+	$safe['id'] = $_POST['id'];
+
+	$error = !$_DB_COMMENTS->approve($safe);
+}
+elseif( $_POST['action']=='unapprove' )
+{
+	$safe['id'] = $_POST['id'];
+
+	$error = !$_DB_COMMENTS->unapprove($safe);
+}
 
 if( $error )
 {

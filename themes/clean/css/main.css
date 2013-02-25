@@ -21,10 +21,6 @@ body {
     padding: 0 20px;
 }
 
-#main {
-	width:100%;
-}
-
 a {
 	color: #327CCB;
 	cursor: pointer;
@@ -35,11 +31,11 @@ a:hover {
 	text-decoration: underline;
 }
 
-
 /* ============================== */
 /* HEADER */
 /* ============================== */
 #head {
+	width:100%;
 	overflow: auto;
 	margin: 75px 0;
 	font-size: 3.2em;
@@ -47,8 +43,8 @@ a:hover {
 }
 
 #head	a.name {
-	text-decoration: none;
 	color: #333;
+	text-decoration: none;
 }
 
 #head	span.slogan {
@@ -56,30 +52,28 @@ a:hover {
 }
 
 /* ============================== */
-/* HEADER POST */
+/* MAIN */
 /* ============================== */
-#head_post {
-	overflow: auto;
-	margin: 10px 0;
-	text-align: center;
-}
-
-#head_post	a.name {
-	text-decoration: none;
-	color: #333;
-	font-size: 0.9em;
-}
-
-#head_post	span.slogan {
-	color: #327CCB;
+#main {
+	width:100%;
 }
 
 /* ============================== */
 /* FOOTER */
 /* ============================== */
 #foot {
+	width:100%;
 	text-align: right;
 	font-size: 0.9em;
+}
+
+/* ============================== */
+/* PAGES - 404 */
+/* ============================== */
+div.page_404 {
+    font-size: 16em;
+    margin-bottom: 75px;
+    text-align: center;
 }
 
 /* ============================== */
@@ -91,22 +85,41 @@ a:hover {
 
 #pager	a.newer {
 	float: right;
+	display: block;
 }
 
 #pager	a.older {
 	float: left;
+	display: block;
 }
 
 /* ============================== */
 /* POST VIEW*/
 /* ============================== */
 article.post {
-	margin-top: 75px;
-	margin-bottom: 75px;
+	margin: 75px 0;
 	clear: both;
 	overflow: auto;
 }
 
+/* ========== POST HEADER ========== */
+article.post	header.post		div.date {
+    background-color: #EEEEEE;
+    color: #666666;
+    display: inline-block;
+    font-size: 0.9em;
+    letter-spacing: 2px;
+    padding: 5px;
+    margin-bottom: 10px;
+}
+
+article.post	header.post		h1.title {
+	color: #333;
+	font-size: 2em;
+	margin: 0;
+}
+
+/* ========== POST CONTENT ========== */
 article.post	pre {
 	background: url("img/bgcode.png");
 	border: 1px solid #E8E8E8;
@@ -133,15 +146,6 @@ article.post 	blockquote {
 	font-size: 2em;
 }
 
-article.post	footer.post {
-    clear: both;
-    margin-top: 20px;
-}
-
-article.post	footer.post		span.date {
-	margin-right: 10px;
-}
-
 article.post	h1,
 article.post	h2,
 article.post	h3,
@@ -154,10 +158,18 @@ article.post	h1 {
 	font-size: 1.8em;
 }
 
-article.post	h1.title {
-	color: #333;
-	font-size: 2em;
-	margin: 0;
+article.post	div.video_embed {
+
+}
+
+/* ========== POST FOOTER ========== */
+article.post	footer.post {
+    clear: both;
+    margin-top: 20px;
+}
+
+article.post	footer.post		span.date {
+	margin-right: 10px;
 }
 
 /* ============================== */
@@ -255,14 +267,30 @@ article.post	h1.title {
 	margin: 40px 0;
 }
 
+div.plugin_box {
+	padding: 20px 0;
+	margin: 20px 0;
+	border-top: 1px solid #f1f1f1;
+	border-bottom: 1px solid #f1f1f1;
+}
+
+div.plugin_box	ul {
+	margin: 0;
+	padding: 0;
+}
+
+div.plugin_box	li {
+	margin: 0 5px;
+	padding: 0;
+	display: inline-block;
+}
+
 /* ============================== */
 /* PLUGIN TWITTER */
 /* ============================== */
 div.plugin_twitter {
 	padding: 0;
 	margin: 20px 0;
-	border-top: 1px solid #f1f1f1;
-	border-bottom: 1px solid #f1f1f1;
 	height: 58px;
 	line-height: 58px;
 	overflow: hidden;
@@ -286,6 +314,15 @@ div.plugin_twitter	li.username {
 }
 
 /* ============================== */
+/* PLUGIN TWITTER STATIC */
+/* ============================== */
+
+div.plugin_twitter_static	li.tweet {
+	display: block;
+	margin: 10px 0;
+}
+
+/* ============================== */
 /* PLUGIN CATEGORIES */
 /* ============================== */
 div.plugin_categories {
@@ -296,15 +333,12 @@ div.plugin_categories {
 }
 
 div.plugin_categories	ul {
-	margin: 0;
-	padding: 0;
 	text-align: center;
 }
 
 div.plugin_categories	li {
 	margin: 0 20px;
 	padding: 0;
-	display: inline;
 	text-transform:uppercase;
 }
 

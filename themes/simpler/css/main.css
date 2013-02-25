@@ -8,29 +8,19 @@ body {
 	font-family: 'Open Sans',arial,sans-serif;
 	background-color: #F8F8F8;
 	margin: 0;
-	padding: 0 20px;
-	font-size: 0.875em;
+	padding: 20px;
+	font-size: 62.5%;
 	color: #616161;
 }
 
-#wrapper {
+#container {
     margin: 0 auto;
+    max-width: 980px;
+    min-width: 600px;
     overflow: auto;
-	max-width: 1240px;
-    background: #FFFFFF;
-    border: 1px solid #F1F1F1;
-}
-
-#main {
-    margin-right: 290px;
-    padding: 20px 20px 0;
-    border-right: 1px solid #F1F1F1;
-}
-
-#sidebar {
-	float: right;
-	margin-right: 10px;
-	width: 260px;
+    padding: 20px;
+	border: 1px solid #F1F1F1;
+	background-color: #FFFFFF;
 }
 
 a {
@@ -43,21 +33,19 @@ a:hover {
 	color: #00A1CB;
 }
 
-
 /* ============================== */
 /* HEADER */
 /* ============================== */
 #head {
-	font-size: 2.6em;
-	font-weight: lighter;
-	margin: 40px auto;
-	max-width: 1240px;
 	overflow: auto;
+	margin: 10px 0 30px 0;
+	font-size: 3.6em;
+	font-weight: lighter;
 }
 
 #head	a.name {
+	color: #333;
 	text-decoration: none;
-	color: #555;
 }
 
 #head	span.slogan {
@@ -65,14 +53,37 @@ a:hover {
 }
 
 /* ============================== */
+/* MAIN */
+/* ============================== */
+#main {
+    margin: 0 auto;
+    overflow: auto;
+	font-size: 1.25em;
+}
+
+#left {
+    margin-right: 280px;
+}
+
+#sidebar {
+	float: right;
+	width: 230px;
+	margin-right: 10px;
+}
+
+/* ============================== */
 /* FOOTER */
 /* ============================== */
 #foot {
 	text-align: right;
-	font-size: 0.9em;
-	max-width: 1240px;
-	overflow: auto;
-	margin: 30px auto;
+	font-size: 1.1em;
+}
+
+/* ============================== */
+/* PAGES - 404 */
+/* ============================== */
+div.page_404 {
+
 }
 
 /* ============================== */
@@ -80,15 +91,24 @@ a:hover {
 /* ============================== */
 #pager {
 	overflow: auto;
-	padding-bottom: 20px;
+	text-align: center;
 }
 
 #pager	a.newer {
 	float: right;
+	background: #FFFFFF;
+	padding: 0 5px;
 }
 
 #pager	a.older {
 	float: left;
+	background: #FFFFFF;
+	padding: 0 5px;
+}
+
+#pager	a.home {
+	background: #FFFFFF;
+	padding: 0 5px;
 }
 
 /* ============================== */
@@ -99,15 +119,24 @@ article.post {
 	overflow: hidden;
 }
 
-article.post	header.post {
-	margin-bottom: 10px;
+/* ========== POST HEADER ========== */
+article.post	header.post		div.date {
+    background-color: #EEEEEE;
+    color: #666666;
+    display: inline-block;
+    font-size: 0.9em;
+    letter-spacing: 2px;
+    padding: 5px;
+    margin-bottom: 10px;
 }
 
-article.post	header.post	h1.title {
-	font-weight: normal;
+article.post	header.post		h1.title {
+	color: #333;
+	font-size: 2em;
 	margin: 0;
 }
 
+/* ========== POST CONTENT ========== */
 article.post	pre {
 	background: url("img/bgcode.png");
 	border: 1px solid #E8E8E8;
@@ -131,16 +160,10 @@ article.post	img:not(.captcha) {
 }
 
 article.post 	blockquote {
-	font-size: 2em;
-
-}
-
-article.post	footer.post {
-	border-top: 1px solid #F1F1F1;
-	clear: both;
-	margin-top: 20px;
-	padding-top: 10px;
-	font-size: 0.9em;
+	font-size: 1.1em;
+	font-style: italic;
+	margin: 0;
+	padding: 0;
 }
 
 article.post	h1,
@@ -148,6 +171,32 @@ article.post	h2,
 article.post	h3,
 article.post	h4,
 article.post	h5 {
+	font-weight: normal;
+}
+
+article.post	h1 {
+	font-size: 1.8em;
+}
+
+article.post	div.video_embed {
+
+}
+
+/* ========== POST FOOTER ========== */
+article.post	footer.post {
+	border-bottom: 1px solid #F1F1F1;
+	border-top: 1px solid #F1F1F1;
+	clear: both;
+	font-size: 0.9em;
+	margin-top: 20px;
+	padding: 10px 0;
+}
+
+article.post	footer.post		span {
+	margin:0 3px;
+}
+
+article.post	footer.post		a {
 	font-weight: normal;
 }
 
@@ -253,15 +302,19 @@ div.plugin_box ul {
 	list-style: none;
 }
 
-div.plugin_box	h3.title {
-	font-weight: normal;
+div.plugin_box	li {
+	display: block;
+	word-wrap: break-word;
+	padding: 2px 0;
 }
 
-/* ============================== */
-/* PLUGIN CATEGORIES */
-/* ============================== */
-div.plugin_categories	li.category {
-	padding: 2px 5px;
+div.plugin_box	h3.title {
+	border-bottom: 1px solid #F1F1F1;
+	border-top: 1px solid #F1F1F1;
+	color: #333333;
+	font-weight: normal;
+	padding: 4px 0;
+	text-transform: uppercase;
 }
 
 /* ============================== */
@@ -284,18 +337,39 @@ div.plugin_twitter	li.username {
 }
 
 /* ============================== */
+/* PLUGIN TWITTER STATIC */
+/* ============================== */
+div.plugin_twitter_static	ul {
+
+}
+
+div.plugin_twitter_static	li.username {
+	display: none;
+}
+
+div.plugin_twitter_static	li.tweet {
+    background: url("img/twitter.png") no-repeat 50% 0;
+    display: block;
+    font-size: 0.95em;
+    padding: 20px 0 8px;
+    word-wrap: break-word;
+}
+
+
+/* ============================== */
 /* PLUGIN ABOUT */
 /* ============================== */
 div.plugin_about {
-	font-size: 0.9em;
+
 }
 
 div.plugin_about	li.name {
 	font-weight: bold;
+	font-size: 0.9em;
 }
 
 div.plugin_about	li.about {
-
+	font-size: 0.9em;
 }
 
 div.plugin_about	li.image {

@@ -5,8 +5,6 @@
  * http://www.nibbleblog.com
  * Author Diego Najar
 
- * Last update: 20/11/2012
-
  * All Nibbleblog code is released under the GNU General Public License.
  * See COPYRIGHT.txt and LICENSE.txt.
 */
@@ -36,6 +34,9 @@
 		'template'=>'default.bit',
 		'title'=>$settings['name'].' - '.$settings['slogan'],
 		'description'=>$settings['about'],
+		'author'=>'',
+		'keywords'=>'',
+		'generator'=>'Nibbleblog',
 		'feed'=>HTML_PATH_ROOT.'feed.php'
 	);
 
@@ -43,6 +44,13 @@
 	{
 		$layout['controller']	= $url['controller'].'/'.$url['action'].'.bit';
 		$layout['view']			= $url['controller'].'/'.$url['action'].'.bit';
+
+		// 404 ?
+		if( !file_exists(THEME_CONTROLLERS.$layout['controller']) || !file_exists(THEME_VIEWS.$layout['view']) || $page_not_found )
+		{
+			$layout['controller']	= 'page/404.bit';
+			$layout['view']			= 'page/404.bit';
+		}
 	}
 
 	if(isset($theme['template'][$url['controller']]))

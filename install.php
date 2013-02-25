@@ -5,8 +5,6 @@
  * http://www.nibbleblog.com
  * Author Diego Najar
 
- * Last update: 30/12/2012
-
  * All Nibbleblog code is released under the GNU General Public License.
  * See COPYRIGHT.txt and LICENSE.txt.
 */
@@ -14,8 +12,8 @@
 if( file_exists('content/private') || file_exists('content/public') )
 	exit('Blog already installed');
 
-require('admin/boot/init/1-fs_php.bit');
-require('admin/boot/init/10-constants.bit');
+require('admin/boot/rules/1-fs_php.bit');
+require('admin/boot/rules/99-constants.bit');
 
 // DB
 require(PATH_DB . 'nbxml.class.php');
@@ -26,21 +24,21 @@ require(PATH_HELPERS . 'crypt.class.php');
 require(PATH_HELPERS . 'date.class.php');
 require(PATH_HELPERS . 'filesystem.class.php');
 require(PATH_HELPERS . 'html.class.php');
-require(PATH_HELPERS . 'image.class.php');
 require(PATH_HELPERS . 'net.class.php');
 require(PATH_HELPERS . 'number.class.php');
 require(PATH_HELPERS . 'redirect.class.php');
 require(PATH_HELPERS . 'text.class.php');
 require(PATH_HELPERS . 'validation.class.php');
-require(PATH_HELPERS . 'video.class.php');
 
 // ============================================================================
 //	VARIABLES
 // ============================================================================
+$permissions_dir = 0755;
 $php_modules = array();
 $dependencies = true;
+$blog_domain = getenv('HTTP_HOST');
 $blog_base_path = '/';
-$blog_address = 'http://'.getenv('HTTP_HOST');
+$blog_address = 'http://'.$blog_domain;
 $installation_complete = false;
 $languagues = array(
 	'cs_CZ'=>'čeština',
@@ -70,9 +68,9 @@ if(function_exists('get_loaded_extensions'))
 // Try to give permissions to the directory content
 if(!file_exists('content'))
 {
-	@mkdir('content');
+	@mkdir('content', $permissions_dir, true);
 }
-@chmod('content',0777);
+@chmod('content', $permissions_dir);
 @rmdir('content/tmp');
 $writing_test = @mkdir('content/tmp');
 
@@ -97,12 +95,12 @@ Date::set_timezone('UTC');
 
 	if( $_SERVER['REQUEST_METHOD'] == 'POST' )
 	{
-		mkdir('content/private',		0777, true);
-		mkdir('content/private/plugins',0777, true);
-		mkdir('content/public',			0777, true);
-		mkdir('content/public/upload',	0777, true);
-		mkdir('content/public/posts',	0777, true);
-		mkdir('content/public/comments',0777, true);
+		mkdir('content/private',		$permissions_dir, true);
+		mkdir('content/private/plugins',$permissions_dir, true);
+		mkdir('content/public',			$permissions_dir, true);
+		mkdir('content/public/upload',	$permissions_dir, true);
+		mkdir('content/public/posts',	$permissions_dir, true);
+		mkdir('content/public/comments',$permissions_dir, true);
 
 		// Config.xml
 		$xml  = '<?xml version="1.0" encoding="utf-8" standalone="yes"?>';
@@ -124,10 +122,9 @@ Date::set_timezone('UTC');
 		$obj->addChild('advanced_post_options',	'0');
 		$obj->addChild('locale',				$_GET['language']);
 		$obj->addChild('friendly_urls',			0);
-		$obj->addChild('enable_wysiwyg',		1);
 
 		$obj->addChild('img_resize',			1);
-		$obj->addChild('img_resize_width',		1240);
+		$obj->addChild('img_resize_width',		1000);
 		$obj->addChild('img_resize_height',		600);
 		$obj->addChild('img_resize_option',		'auto');
 
@@ -135,6 +132,12 @@ Date::set_timezone('UTC');
 		$obj->addChild('img_thumbnail_width',	190);
 		$obj->addChild('img_thumbnail_height',	190);
 		$obj->addChild('img_thumbnail_option',	'landscape');
+
+		$obj->addChild('notification_comments',			1);
+		$obj->addChild('notification_session_fail',		0);
+		$obj->addChild('notification_session_start',	0);
+		$obj->addChild('notification_email_to',			$_POST['email']);
+		$obj->addChild('notification_email_from',		'noreply@'.$blog_domain);
 
 		$obj->asXml( FILE_XML_CONFIG );
 
@@ -159,7 +162,12 @@ Date::set_timezone('UTC');
 		$xml .= '<comments autoinc="0">';
 		$xml .= '</comments>';
 		$obj = new NBXML($xml, 0, FALSE, '', FALSE);
-		$node = $obj->addChild('spam', '');
+		$obj->addChild('moderate', 1);
+		$obj->addChild('sanitize', 1);
+		$obj->addChild('monitor_enable', 0);
+		$obj->addChild('monitor_api_key', '');
+		$obj->addChild('monitor_spam_control', '0.75');
+		$obj->addChild('monitor_auto_delete', 0);
 		$obj->asXml( FILE_XML_COMMENTS );
 
 		// post.xml
@@ -170,13 +178,12 @@ Date::set_timezone('UTC');
 		$node = $obj->addChild('sticky', '');
 		$obj->asXml( FILE_XML_POST );
 
-		// syslog.xml
+		// notifications.xml
 		$xml  = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
-		$xml .= '<syslog>';
-		$xml .= '</syslog>';
+		$xml .= '<notifications>';
+		$xml .= '</notifications>';
 		$obj = new NBXML($xml, 0, FALSE, '', FALSE);
-		$obj->addChild('login', '');
-		$obj->asXml( FILE_XML_SYSLOG );
+		$obj->asXml( FILE_XML_NOTIFICATIONS );
 
 		// shadow.php
 		$new_salt = Text::random_text(11);
@@ -201,7 +208,7 @@ Date::set_timezone('UTC');
 		$content .= '<p>'.$_LANG['WELCOME_POST_LINE3'].'  <a target="_blank" href="http://forum.nibbleblog.com">http://forum.nibbleblog.com</a></p>';
 		$content .= '<p>'.$_LANG['WELCOME_POST_LINE4'].'  <a target="_blank" href="http://www.facebook.com/nibbleblog">https://www.facebook.com/nibbleblog</a></p>';
 		$_DB_POST = new DB_POSTS(FILE_XML_POST, null);
-		$_DB_POST->add( array('id_user'=>0, 'id_cat'=>0, 'type'=>'simple', 'description'=>$_LANG['WELCOME_POST_TITLE'], 'title'=>$_LANG['WELCOME_POST_TITLE'], 'content'=>$content, 'allow_comments'=>'1', 'sticky'=>'0') );
+		$_DB_POST->add( array('id_user'=>0, 'id_cat'=>0, 'type'=>'simple', 'description'=>$_LANG['WELCOME_POST_TITLE'], 'title'=>$_LANG['WELCOME_POST_TITLE'], 'content'=>$content, 'allow_comments'=>'1', 'sticky'=>'0', 'slug'=>'welcome-post') );
 
 		$installation_complete = true;
 	}
@@ -214,6 +221,7 @@ Date::set_timezone('UTC');
 	<title>Nibbleblog Installer</title>
 
 	<script src="./admin/js/jquery/jquery.js"></script>
+	<script src="./admin/js/functions.js"></script>
 
 	<style type="text/css">
 		body {
@@ -222,7 +230,7 @@ Date::set_timezone('UTC');
 			margin: 0;
 			padding: 0;
 			font-size: 0.875em;
-			color: #616161;
+			color: #555;
 		}
 
 		#container {
@@ -230,21 +238,23 @@ Date::set_timezone('UTC');
 			border: 1px solid #EBEBEB;
 			border-radius: 3px 3px 3px 3px;
 			margin: 50px auto;
-			max-width: 800px;
+			max-width: 700px;
 			padding: 20px 30px;
 			width: 60%;
+			box-shadow: 0 0 4px rgba(0, 0, 0, 0.05);
 		}
 
 		h1 {
-
+			margin: 0 0 20px 0;
+			text-align: center;
 		}
 
 		h2 {
-			color: #339900;
+			color: #6C7479;
 		}
 
 		a {
-			color: #3C6EB4;
+			color: #2361D3;
 			cursor: pointer;
 			text-decoration: none;
 		}
@@ -254,10 +264,8 @@ Date::set_timezone('UTC');
 		}
 
 		a.lang {
-			float: right;
-			font-size: 12px;
-			margin-left: 8px;
-			text-decoration:underline;
+			font-size: 0.9em;
+			display: inline-block;
 		}
 
 		div.dependency {
@@ -294,14 +302,14 @@ Date::set_timezone('UTC');
 			padding: 8px;
 			outline:none;
 			resize: none;
-			margin-bottom: 10px;
+			margin-bottom: 15px;
 		}
 
 		label {
 			color: #333;
 			margin-bottom:2px;
 			display:block;
-
+			font-size: 0.9em;
 		}
 
 		input[type="submit"] {
@@ -310,13 +318,19 @@ Date::set_timezone('UTC');
 
 		footer {
 			margin: 30px 0;
-			border-top: 1px dotted #ccc;
-			font-size:13px;
+			border-top: 1px solid #f1f1f1;
+			text-align: center;
+			font-size: 0.9em;
 		}
 		div.lang {
 			margin-right: -20px;
 			margin-top: -10px;
 			overflow: auto;
+			text-align: center;
+		}
+
+		#head {
+			margin-bottom: 20px;
 		}
 </style>
 
@@ -325,17 +339,20 @@ Date::set_timezone('UTC');
 
 	<div id="container">
 
-		<header>
-			<div class="lang">
+		<header id="head">
 			<?php
+				echo Html::h1( array('content'=>$_LANG['WELCOME_TO_NIBBLEBLOG']) );
+
 				if(!$installation_complete)
 				{
+					echo '<div class="lang">';
+
 					foreach( $languagues as $key=>$value)
-						echo '<a class="lang" href="./install.php?language='.$key.'">'.$value.'</a>';
+						echo '<a class="lang" href="./install.php?language='.$key.'">'.$value.'</a><span style="margin:0 5px;">·</span>';
+
+					echo '</div>';
 				}
 			?>
-			</div>
-			<?php echo Html::h1( array('content'=>$_LANG['WELCOME_TO_NIBBLEBLOG']) ); ?>
 		</header>
 
 		<noscript>
@@ -391,7 +408,7 @@ Date::set_timezone('UTC');
 				echo Html::div_close();
 
 				echo Html::div_open( array('class'=>'dependency') );
-					echo Html::link( array('class'=>'description', 'content'=>$_LANG['PHP_MODULE'].' - SimpleXML', 'href'=>'http://ar2.php.net/manual/en/book.simplexml.php', 'target'=>'_blank') );
+					echo Html::link( array('class'=>'description', 'content'=>$_LANG['PHP_MODULE'].' - SimpleXML', 'href'=>'http://www.php.net/manual/en/book.simplexml.php', 'target'=>'_blank') );
 
 					if( in_array('SimpleXML', $php_modules) )
 					{
@@ -406,7 +423,7 @@ Date::set_timezone('UTC');
 				echo Html::div_close();
 
 				echo Html::div_open( array('class'=>'dependency') );
-					echo Html::link( array('class'=>'description', 'content'=>$_LANG['WRITING_TEST_ON_CONTENT_DIRECTORY'], 'href'=>'http://forum.nibbleblog.com', 'target'=>'_blank') );
+					echo Html::link( array('class'=>'description', 'content'=>$_LANG['WRITING_TEST_ON_CONTENT_DIRECTORY'], 'href'=>'http://wiki.nibbleblog.com/doku.php?id=how_to_set_up_permissions', 'target'=>'_blank') );
 
 					if( $writing_test )
 					{
@@ -423,31 +440,33 @@ Date::set_timezone('UTC');
 		</section>
 
 		<section id="configuration">
-			<h2><?php echo $_LANG['CONFIGURATION'] ?></h2>
+
 			<?php
 				echo Html::form_open( array('id'=>'js_form', 'name'=>'form', 'method'=>'post') );
 
 					echo Html::label( array('content'=>$_LANG['BLOG_TITLE']) );
-					echo Html::input( array('id'=>'js_name', 'name'=>'name', 'type'=>'text', 'autocomplete'=>'off', 'maxlength'=>'254') );
+					echo Html::input( array('id'=>'js_name', 'name'=>'name', 'type'=>'text', 'autocomplete'=>'off', 'maxlength'=>'254', 'value'=>'') );
 
 					echo Html::label( array('content'=>$_LANG['BLOG_SLOGAN']) );
-					echo Html::input( array('id'=>'js_slogan', 'name'=>'slogan', 'type'=>'text', 'autocomplete'=>'off', 'maxlength'=>'254') );
+					echo Html::input( array('id'=>'js_slogan', 'name'=>'slogan', 'type'=>'text', 'autocomplete'=>'off', 'maxlength'=>'254', 'value'=>'') );
 
 					echo Html::label( array('content'=>$_LANG['ADMINISTRATOR_USERNAME'].'*') );
-					echo Html::input( array('id'=>'js_username', 'name'=>'username', 'type'=>'text', 'autocomplete'=>'off', 'maxlength'=>'254') );
+					echo Html::input( array('id'=>'js_username', 'name'=>'username', 'type'=>'text', 'autocomplete'=>'off', 'maxlength'=>'254', 'value'=>'') );
 
 					echo Html::label( array('content'=>$_LANG['ADMINISTRATOR_PASSWORD'].'*') );
-					echo Html::input( array('id'=>'js_password', 'name'=>'password', 'type'=>'text', 'autocomplete'=>'off', 'maxlength'=>'254') );
+					echo Html::input( array('id'=>'js_password', 'name'=>'password', 'type'=>'text', 'autocomplete'=>'off', 'maxlength'=>'254', 'value'=>'') );
+
+					echo Html::label( array('content'=>$_LANG['ADMINISTRATOR_EMAIL'].'*') );
+					echo Html::input( array('id'=>'js_email', 'name'=>'email', 'type'=>'text', 'autocomplete'=>'off', 'value'=>'', 'placeholder'=>'Enter a valid e-mail address') );
 
 					echo Html::div_open( array('hidden'=>!isset($_GET['expert'])) );
-						echo Html::label( array('content'=>$_LANG['ADMINISTRATOR_EMAIL']) );
-						echo Html::input( array('name'=>'email', 'type'=>'text', 'autocomplete'=>'off') );
 
 						echo Html::label( array('content'=>$_LANG['BLOG_ADDRESS']) );
 						echo Html::input( array('name'=>'url', 'type'=>'text', 'value'=>$blog_address, 'autocomplete'=>'off') );
 
 						echo Html::label( array('content'=>$_LANG['BLOG_BASE_PATH']) );
 						echo Html::input( array('name'=>'path', 'type'=>'text', 'value'=>$blog_base_path, 'autocomplete'=>'off') );
+
 					echo Html::div_close();
 
 					echo Html::input( array('type'=>'submit', 'value'=>$_LANG['INSTALL']) );
@@ -457,7 +476,7 @@ Date::set_timezone('UTC');
 		</section>
 
 		<footer>
-			<p><a href="http://nibbleblog.com">Nibbleblog <?php echo NIBBLEBLOG_VERSION ?> "<?php echo NIBBLEBLOG_NAME ?>"</a> | Copyright (2009 - 2012) + GPL v3 | Developed by Diego Najar | <?php echo Html::link( array('content'=>$_LANG['EXPERT_MODE'], 'href'=>'./install.php?expert=true&language='.$_GET['language']) ) ?></p>
+			<p><a href="http://nibbleblog.com">Nibbleblog <?php echo NIBBLEBLOG_VERSION ?> "<?php echo NIBBLEBLOG_NAME ?>"</a> | Copyright (2009 - 2013) + GPL v3 | Developed by Diego Najar | <?php echo Html::link( array('content'=>$_LANG['EXPERT_MODE'], 'href'=>'./install.php?expert=true&language='.$_GET['language']) ) ?></p>
 		</footer>
 
 	</div>
@@ -477,19 +496,27 @@ Date::set_timezone('UTC');
 		$("form").submit(function(e){
 			var username = $("#js_username");
 			var password = $("#js_password");
+			var email = $("#js_email");
 
 			username.css("background-color", "");
 			password.css("background-color", "");
+			email.css("background-color", "");
 
-			if(username.attr("value").length<2)
+			if(empty(username.val()))
 			{
-				username.css("background-color", "#F9EDBE");
+				username.css("background-color", "#D8F0F0");
 				return false;
 			}
 
-			if(password.attr("value").length<2)
+			if(empty(password.val()))
 			{
-				password.css("background-color", "#F9EDBE");
+				password.css("background-color", "#D8F0F0");
+				return false;
+			}
+
+			if(!validate_email(email.val()))
+			{
+				email.css("background-color", "#D8F0F0");
 				return false;
 			}
 

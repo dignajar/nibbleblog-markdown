@@ -5,8 +5,6 @@
  * http://www.nibbleblog.com
  * Author Diego Najar
 
- * Last update: 29/10/2012
-
  * All Nibbleblog code is released under the GNU General Public License.
  * See COPYRIGHT.txt and LICENSE.txt.
 */
@@ -107,7 +105,7 @@ class Login {
 	{
 		$_SESSION = array();
 
-		if (ini_get("session.use_cookies"))
+		if(ini_get("session.use_cookies"))
 		{
 			$params = session_get_cookie_params();
 			setcookie(session_name(), '', time() - 42000, $params["path"], $params["domain"], $params["secure"], $params["httponly"]);

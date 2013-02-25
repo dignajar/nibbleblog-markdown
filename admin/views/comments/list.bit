@@ -1,28 +1,59 @@
 <?php
 
-	foreach( $comments as $comment )
+	if(empty($comments))
 	{
-		$date = Date::format($comment['pub_date_unix'], COMMENT_DATE_FORMAT);
+		echo Html::p( array('class'=>'no_comments', 'content'=>$_LANG['THERE_ARE_NO_PUBLISHED_COMMENTS']) );
+	}
+	else
+	{
+		foreach( $comments as $comment )
+		{
+			$date = Date::format($comment['pub_date_unix'], COMMENT_DATE_FORMAT);
 
-		$post = $_DB_POST->get( array('id'=>$comment['id_post']) );
+			$post = $_DB_POST->get( array('id'=>$comment['id_post']) );
 
-		echo Html::div_open( array('class'=>'comment_box') );
+			echo Html::div_open( array('class'=>'comment_box') );
 
-			echo Html::div_open( array('class'=>'float'));
-				echo Html::div_open( array('class'=>'left'));
-					echo Html::h3( array('class'=>'content', 'content'=>$comment['content']) );
-					echo Html::h3( array('class'=>'author', 'content'=>$comment['author_name'].' - '.$comment['author_email']) );
+				echo Html::div_open( array('class'=>'float'));
+					echo Html::div_open( array('class'=>'left'));
+
+						echo Html::h3( array('class'=>'comment', 'content'=>$comment['content']) );
+						echo Html::h3( array('class'=>'information', 'content'=>'<span class="title">'.$post['title'].'</span> - '.$_LANG['AUTHOR'].': '.$comment['author_name'].' - '.$_LANG['EMAIL'].': '.$comment['author_email'].' - IP: '.$comment['author_ip']) );
+					echo Html::div_close();
+
+					echo Html::div_open( array('class'=>'right'));
+						echo Html::h3( array('class'=>'date', 'content'=>$date) );
+					echo Html::div_close();
 				echo Html::div_close();
 
-				echo Html::div_open( array('class'=>'right'));
-					echo Html::h3( array('class'=>'date', 'content'=>$date) );
+				echo Html::div_open( array('class'=>'options'));
+					if($comment['type']=='NULL')
+					{
+						echo Html::link( array('class'=>'js_button_unapprove', 'data-id'=>$comment['id'], 'content'=>$_LANG['DISAPPROVE']) );
+					}
+					else
+					{
+						if($comment['type']=='spam')
+						{
+							echo Html::link( array('class'=>'js_button_approve', 'data-id'=>$comment['id'], 'content'=>$_LANG['APPROVE_SPAM_DETECTED']) );
+						}
+						else
+						{
+							echo Html::link( array('class'=>'js_button_approve', 'data-id'=>$comment['id'], 'content'=>$_LANG['APPROVE']) );
+						}
+					}
+					echo Html::link( array('class'=>'js_button_delete', 'data-flag'=>'0', 'data-id'=>$comment['id'], 'content'=>$_LANG['DELETE']) );
 				echo Html::div_close();
-			echo Html::div_close();
 
-			echo Html::div_open( array('class'=>'options'));
-				echo Html::link( array('class'=>'js_button_delete', 'data-flag'=>'0', 'data-id'=>$comment['id'], 'content'=>$_LANG['DELETE']) );
 			echo Html::div_close();
+		}
 
+		// Pager
+		echo Html::div_open( array('class'=>'pager') );
+			for( $i=0; $i<$total_pages; $i++ )
+			{
+				echo Html::link( array('content'=>$i, 'href'=>HTML_PATH_ROOT.'admin.php?controller=comments&amp;action=list&amp;page='.$i) );
+			}
 		echo Html::div_close();
 	}
 
@@ -32,22 +63,46 @@
 
 $(document).ready(function() {
 
+	$("div.comment_box").on("click", "a.js_button_approve", function() {
+		var self = $(this);
+		var id = self.attr("data-id");
+
+		self.removeClass().html("<?php echo $_LANG['LOADING']; ?>");
+
+		if(set_ajax(id, "approve", "comments.php"))
+		{
+			self.removeClass().addClass("js_button_unapprove");
+			self.html("Unapprove");
+		}
+	});
+
+	$("div.comment_box").on("click", "a.js_button_unapprove", function() {
+		var self = $(this);
+		var id = self.attr("data-id");
+
+		self.removeClass().html("<?php echo $_LANG['LOADING']; ?>");
+
+		if(set_ajax(id, "unapprove", "comments.php"))
+		{
+			self.removeClass().addClass("js_button_approve");
+			self.html("Approve");
+		}
+	});
+
 	$("a.js_button_delete").click( function() {
 		var self = $(this);
 		var box = self.parent().parent();
 		var flag = self.attr("data-flag");
 		var id = self.attr("data-id");
 
-		if( flag == "1" )
+		if(flag=="1")
 		{
-			$.ajax({
-					url: HTML_PATH_ADMIN_AJAX + "comments.php", type: 'POST', cache: false, timeout: 15000, dataType: "xml", async: false,
-					data: { action:"delete", id:id },
-					success: function(xml)
-					{
-						box.fadeOut();
-					}
-			});
+			self.removeClass().html("<?php echo $_LANG['LOADING']; ?>");
+
+			if(set_ajax(id, "delete", "comments.php"))
+			{
+				box.fadeOut();
+			}
 		}
 		else
 		{
@@ -55,7 +110,6 @@ $(document).ready(function() {
 			self.html("<?php echo $_LANG['ARE_YOU_SURE'] ?>");
 			self.addClass("remove");
 		}
-
 	});
 
 }); // end document

@@ -2,15 +2,21 @@
 <html>
 <head>
 	<meta charset="utf-8">
+	<meta name='robots' content='noindex,nofollow' />
 
 	<title>Nibbleblog - Dashboard</title>
 
 	<link rel="stylesheet" type="text/css" href="<?php echo HTML_PATH_ADMIN_TEMPLATES.'default/css/normalize.css' ?>" />
 	<link rel="stylesheet" type="text/css" href="<?php echo HTML_PATH_ADMIN_TEMPLATES.'default/css/main.css' ?>" />
 
+	<!-- JAVASCRIPT -->
+	<script charset="utf-8" src="<?php echo JS_JQUERY ?>"></script>
 	<script charset="utf-8" src="<?php echo HTML_PATH_ADMIN_JS.'system.php' ?>"></script>
 	<script charset="utf-8" src="<?php echo HTML_PATH_ADMIN_JS.'functions.js' ?>"></script>
-	<script charset="utf-8" src="<?php echo HTML_PATH_ADMIN_JS.'jquery/jquery.js' ?>"></script>
+
+	<!-- markItUp! -->
+	<link rel="stylesheet" type="text/css" href="<?php echo HTML_PATH_ADMIN_JS.'markitup/skins/simple/style.css' ?>" />
+	<link rel="stylesheet" type="text/css" href="<?php echo HTML_PATH_ADMIN_JS.'markitup/sets/markdown/style.css' ?>" />
 </head>
 <body>
 
@@ -49,6 +55,10 @@
 				?>
 			</div>
 
+		</div>
+
+		<div id="container_footer">
+			<p><a href="http://nibbleblog.com">Nibbleblog v<?php echo NIBBLEBLOG_VERSION ?> "<?php echo NIBBLEBLOG_NAME ?>"</a></p>
 		</div>
 
 	</div>

@@ -1,0 +1,34 @@
+<?php
+/*
+ * Nibbleblog
+ * http://www.nibbleblog.com
+
+ * Require
+ *
+
+ * Return
+ *
+*/
+
+// =====================================================================
+//	SYSTEM INFORMATION
+// =====================================================================
+	define('NIBBLEBLOG_VERSION',		'3.5 rc2');
+	define('NIBBLEBLOG_NAME',			'Easter egg');
+	define('NIBBLEBLOG_RELEASE_DATE',	'23/02/2013');
+
+// =====================================================================
+//	DEBUG
+// =====================================================================
+	define('DEBUG_MODE',	TRUE);
+
+	if(DEBUG_MODE)
+	{
+		error_reporting(-1);
+	}
+	else
+	{
+		error_reporting(0);
+	}
+
+?>
