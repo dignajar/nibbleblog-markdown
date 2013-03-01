@@ -58,7 +58,7 @@ a:hover {
 #main {
     margin: 0 auto;
     overflow: auto;
-	font-size: 1.25em;
+	font-size: 1.32em;
 }
 
 #left {
@@ -148,11 +148,13 @@ article.post	pre {
 }
 
 article.post	.console {
-	background: url("img/console.png") no-repeat scroll 10px center #F1F1F1;
-	display: block;
-	line-height: 50px;
-	margin: 5px 0;
-	padding-left: 60px;
+    background: url("img/console.png") no-repeat 8px 8px #F1F1F1;
+    display: block;
+    line-height: 24px;
+    margin: 5px 0;
+    min-height: 30px;
+    padding-left: 38px;
+    padding-top: 5px;
 }
 
 article.post	img:not(.captcha) {
@@ -176,6 +178,10 @@ article.post	h5 {
 
 article.post	h1 {
 	font-size: 1.8em;
+}
+
+article.post	p {
+	line-height: 20px;
 }
 
 article.post	div.video_embed {

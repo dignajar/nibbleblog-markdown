@@ -43,35 +43,48 @@ class Comment {
 */
 	// Return TRUE if the comment is inserted
 	// Return FALSE if the comment is spam or need moderation
+	// Return -1 if comment flood or post doesn't allow comments
 	public function add()
 	{
+		// Flood protection
+		if(Session::get_last_comment_at() + COMMENT_INTERVAL > time())
+		{
+			return -1;
+		}
+
 		// Sleep
-		sleep($this->comment_settings['sleep']);
+		sleep(2);
 
 		// Comment data from session
 		$data = Session::get_comment_array();
 
-		// If the post allow comments
+		// If the post doesn't allow comments
 		if(!$data['post_allow_comments'])
 		{
-			return(false);
+			return -1;
 		}
 
 		// Anti-spam
 		$spam_level = $this->get_spam_level($data['content']);
 
-		// Set type
-		if($spam_level>(float)$this->comment_settings['monitor_spaminess'])
-		{
-			$data['type'] = 'spam';
-		}
-		elseif($this->comment_settings['moderate'])
+		if($spam_level===false)
 		{
 			$data['type'] = 'unapproved';
 		}
 		else
 		{
-			$data['type'] = 'NULL';
+			if($spam_level>(float)$this->comment_settings['monitor_spam_control'])
+			{
+				$data['type'] = 'spam';
+			}
+			elseif($this->comment_settings['moderate'])
+			{
+				$data['type'] = 'unapproved';
+			}
+			else
+			{
+				$data['type'] = 'NULL';
+			}
 		}
 
 		// Sanitize
@@ -90,12 +103,14 @@ class Comment {
 				// Add notification
 				$this->db_notification->add('comment', $this->settings['notification_comments'], 'YOU_HAVE_A_NEW_COMMENT');
 			}
+
+			Session::set_last_comment_at(time());
 		}
 
 		// Clean session
-		Session::init();
+		Session::reset();
 
-		return($data['type']=='NULL');
+		return $data['type']=='NULL';
 	}
 
 	// Return array with the comment if exist
@@ -160,21 +175,36 @@ class Comment {
 	{
 		if($this->comment_settings['monitor_enable'])
 		{
-			$defensio = new Defensio($this->comment_settings['monitor_api_key']);
+            try
+            {
+				$defensio = new Defensio($this->comment_settings['monitor_api_key']);
 
-			$document = array(
-							'type'=>'comment',
-							'content'=>$content,
-							'platform'=>'Nibbleblog',
-							'client' => 'Nibbleblog',
-							'async' => 'false'
-			);
+				// Invalid API KEY
+				if(array_shift($defensio->getUser()) != 200)
+				{
+					return(false);
+				}
 
-			$defensio_result = $defensio->postDocument($document);
+				$document = array(
+								'type'=>'comment',
+								'content'=>$content,
+								'platform'=>'Nibbleblog',
+								'client' => 'Nibbleblog',
+								'async' => 'false'
+				);
 
-			return( (float)$defensio_result[1]->spaminess );
+				$defensio_result = $defensio->postDocument($document);
+
+				return( (float)$defensio_result[1]->spaminess );
+            }
+            catch( Exception $e )
+            {
+				// Something fail, timeout, invalid key, etc...
+                return(false);
+            }
 		}
 
+		// Spam monitor disabled
 		return(0);
 	}
 
