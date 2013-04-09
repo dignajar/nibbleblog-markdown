@@ -40,6 +40,7 @@
 	require(PATH_HELPERS . 'number.class.php');
 	require(PATH_HELPERS . 'redirect.class.php');
 	require(PATH_HELPERS . 'session.class.php');
+	require(PATH_HELPERS . 'social.class.php');
 	require(PATH_HELPERS . 'text.class.php');
 	require(PATH_HELPERS . 'validation.class.php');
 	require(PATH_HELPERS . 'video.class.php');
@@ -69,13 +70,16 @@
 	// DB
 	if(defined('FILE_XML_POST') && defined('FILE_XML_CATEGORIES') && defined('FILE_XML_CONFIG') && defined('FILE_XML_NOTIFICATIONS'))
 	{
+		// Level 1
 		$_DB_SETTINGS		= new DB_SETTINGS( FILE_XML_CONFIG );
 		$_DB_CATEGORIES		= new DB_CATEGORIES( FILE_XML_CATEGORIES );
+		$_DB_POST			= new DB_POSTS( FILE_XML_POST );
 
-		$_DB_NOTIFICATIONS 	= new DB_NOTIFICATIONS( FILE_XML_NOTIFICATIONS, $_DB_SETTINGS->get() );
-		$_DB_POST			= new DB_POSTS( FILE_XML_POST, $_DB_SETTINGS->get() );
+		// Level 2
 		$_DB_COMMENTS		= new DB_COMMENTS( FILE_XML_COMMENTS, $_DB_SETTINGS->get() );
+		$_DB_NOTIFICATIONS 	= new DB_NOTIFICATIONS( FILE_XML_NOTIFICATIONS, $_DB_SETTINGS->get() );
 
+		// Level 3
 		// API for humans
 		$Comment	= new Comment($_DB_COMMENTS, $_DB_NOTIFICATIONS, $_DB_SETTINGS->get());
 		$Post		= new Post($_DB_POST);

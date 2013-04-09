@@ -31,6 +31,7 @@ $controllers['post']['edit_quote'] 		= array('security'=>true, 'title'=>$_LANG['
 $controllers['post']['list'] 			= array('security'=>true, 'title'=>$_LANG['POSTS'], 'controller'=>'list', 'view'=>'list', 'template'=>'default');
 
 $controllers['categories']['list']		= array('security'=>true, 'title'=>$_LANG['MANAGE_CATEGORIES'], 'controller'=>'list', 'view'=>'list', 'template'=>'default');
+$controllers['categories']['edit']		= array('security'=>true, 'title'=>$_LANG['MANAGE_CATEGORIES'], 'controller'=>'edit', 'view'=>'edit', 'template'=>'default');
 
 $controllers['comments']['list']		= array('security'=>true, 'title'=>$_LANG['COMMENTS'], 'controller'=>'list', 'view'=>'list', 'template'=>'default');
 $controllers['comments']['settings']	= array('security'=>true, 'title'=>$_LANG['COMMENT_SETTINGS'], 'controller'=>'settings', 'view'=>'settings', 'template'=>'default');
@@ -42,6 +43,7 @@ $controllers['settings']['image']		= array('security'=>true, 'title'=>$_LANG['IM
 $controllers['settings']['themes']		= array('security'=>true, 'title'=>$_LANG['CHANGE_THEME'], 'controller'=>'themes', 'view'=>'themes', 'template'=>'default');
 $controllers['settings']['username']	= array('security'=>true, 'title'=>$_LANG['USERNAME_AND_PASSWORD'], 'controller'=>'username', 'view'=>'username', 'template'=>'default');
 $controllers['settings']['notifications']= array('security'=>true, 'title'=>$_LANG['NOTIFICATIONS'], 'controller'=>'notifications', 'view'=>'notifications', 'template'=>'default');
+$controllers['settings']['seo'] 		 = array('security'=>true, 'title'=>$_LANG['SEO_OPTIONS'], 'controller'=>'seo', 'view'=>'seo', 'template'=>'default');
 
 $controllers['plugins']['list']			= array('security'=>true, 'title'=>$_LANG['PLUGINS'], 'controller'=>'list', 'view'=>'list', 'template'=>'default');
 $controllers['plugins']['install']		= array('security'=>true, 'title'=>$_LANG['PLUGINS'], 'controller'=>'install', 'view'=>'config', 'template'=>'default');

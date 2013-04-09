@@ -9,6 +9,7 @@
  * $_DB_CATEGORIES
  * $_DB_POST
  * $_DB_COMMENTS
+ * $_LANG
 
  * Return
  * (array) $posts
@@ -24,12 +25,12 @@
 	if($url['category']!==null)
 	{
 		// Get the category ID
-		$id_cat = $_DB_CATEGORIES->get_id( array('name'=>$url['category']) );
+		$category = $_DB_CATEGORIES->get_by_slug( array('slug'=>$url['category']) );
 
-		if($id_cat!==false)
+		if($category!==false)
 		{
 			// Posts by category
-			$posts = $_DB_POST->get_list_by_category( array('page'=>$url['page'], 'amount'=>$settings['items_page'], 'id_cat'=>$id_cat) );
+			$posts = $_DB_POST->get_list_by_category( array('page'=>$url['page'], 'amount'=>$settings['items_page'], 'id_cat'=>$category['id']) );
 		}
 		else
 		{
@@ -59,10 +60,34 @@
 	}
 
 	// ---- COMMENTS
-	// Get all comments for each post
+	// ---- PERMALINKS
+	// ---- CATEGORY
+	// ---- PUBLISH DATE
 	foreach($posts as $key=>$value)
 	{
+		// Comments
 		$posts[$key]['comments'] = $_DB_COMMENTS->get_list_by_post( array('id_post'=>$value['id']) );
+
+		// Category
+		$category = $_DB_CATEGORIES->get( array('id'=>$posts[$key]['id_cat']) );
+		$posts[$key]['category'] = $category['name'];
+
+		// Publish date
+		$posts[$key]['pub_date'] = Date::format($posts[$key]['pub_date_unix'], $settings['timestamp_format']);
+		$posts[$key]['mod_date'] = Date::format($posts[$key]['mod_date_unix'], $settings['timestamp_format']);
+
+		// Permalink
+		if( $settings['friendly_urls'] )
+		{
+			if(  Text::not_empty($posts[$key]['slug']) )
+				$slug = $posts[$key]['slug'];
+			elseif( Text::not_empty($posts[$key]['title']) )
+				$slug = Text::clean_url($posts[$key]['title'], '-', isset($_LANG['TRANSLIT'])?$_LANG['TRANSLIT']:false);
+			else
+				$slug = $posts[$key]['type'];
+
+			$posts[$key]['permalink'] = HTML_PATH_ROOT.'post-'.$posts[$key]['id'].'/'.$slug;
+		}
 	}
 
 	if(isset($posts[0]))
@@ -75,5 +100,6 @@
 // =====================================================================
 	unset($id_cat);
 	unset($tmp);
-
+	unset($slug);
+	unset($category);
 ?>

@@ -1,8 +1,27 @@
 AddDefaultCharset UTF-8
+
+# Disable directory browsing
 Options -Indexes
 
 # Disable Magic Quotes
 <IfModule mod_php5.c>
   php_flag magic_quotes_gpc                 off
-  php_flag magic_quotes_sybase              off
 </IfModule>
+
+# Secure .xml files
+<FilesMatch ".(xml)$">
+ Order Allow,Deny
+ Deny from all
+</FilesMatch>
+
+# Secure shadow.php
+<Files shadow.php>
+ order allow,deny
+ deny from all
+</Files>
+
+# Secure keys.php
+<Files keys.php>
+ order allow,deny
+ deny from all
+</Files>

@@ -9,26 +9,44 @@
  * See COPYRIGHT.txt and LICENSE.txt.
 */
 
-define('UPDATER_VERSION', '1.1');
+define('UPDATER_VERSION', '1.2');
 
+// =====================================================================
+// Require
+// =====================================================================
 require('admin/boot/rules/1-fs_php.bit');
 require('admin/boot/rules/99-constants.bit');
 
-// DB
 require(PATH_DB . 'nbxml.class.php');
+require(PATH_DB . 'db_settings.class.php');
 
-// Helpers
 require(PATH_HELPERS . 'html.class.php');
 require(PATH_HELPERS . 'date.class.php');
+require(PATH_HELPERS . 'text.class.php');
 
-// Language
-require( 'languages/en_US.bit' );
+// =====================================================================
+// DB
+// =====================================================================
+$_DB_SETTINGS	= new DB_SETTINGS( FILE_XML_CONFIG );
 
-// Set timezone
-Date::set_timezone('UTC');
-
+// =====================================================================
 // Variables
+// =====================================================================
 $blog_domain = getenv('HTTP_HOST');
+
+$settings = $_DB_SETTINGS->get();
+
+// =====================================================================
+// Language
+// =====================================================================
+include(PATH_LANGUAGES.'en_US.bit');
+include(PATH_LANGUAGES.$settings['language'].'.bit');
+
+Date::set_timezone($settings['timezone']);
+
+Date::set_locale($settings['locale']);
+
+$translit_enable = isset($_LANG['TRANSLIT'])?$_LANG['TRANSLIT']:false;
 
 ?>
 
@@ -122,7 +140,6 @@ $blog_domain = getenv('HTTP_HOST');
 				// notifications.xml
 				if(!file_exists(FILE_XML_NOTIFICATIONS))
 				{
-
 					$xml  = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
 					$xml .= '<notifications>';
 					$xml .= '</notifications>';
@@ -139,6 +156,16 @@ $blog_domain = getenv('HTTP_HOST');
 				set_if_not($obj,'notification_session_start',0);
 				set_if_not($obj,'notification_email_to','');
 				set_if_not($obj,'notification_email_from','noreply@'.$blog_domain);
+
+				// SEO Options
+				set_if_not($obj,'seo_site_title','');
+				set_if_not($obj,'seo_site_description','');
+				set_if_not($obj,'seo_keywords','');
+				set_if_not($obj,'seo_robots','');
+				set_if_not($obj,'seo_google_code','');
+				set_if_not($obj,'seo_bing_code','');
+				set_if_not($obj,'seo_author','');
+
 				$obj->asXml( FILE_XML_CONFIG );
 				echo Html::p( array('class'=>'pass', 'content'=>'DB updated: '.FILE_XML_CONFIG) );
 
@@ -152,6 +179,24 @@ $blog_domain = getenv('HTTP_HOST');
 				set_if_not($obj,'monitor_auto_delete',0);
 				$obj->asXml( FILE_XML_COMMENTS );
 				echo Html::p( array('class'=>'pass', 'content'=>'DB updated: '.FILE_XML_COMMENTS) );
+
+				// Categories
+				$obj = new NBXML(FILE_XML_CATEGORIES, 0, TRUE, '', FALSE);
+
+				foreach( $obj->children() as $children )
+				{
+					$name = utf8_decode((string)$children->attributes()->name);
+
+					$slug = Text::clean_url($name, '-', $translit_enable);
+
+					@$children->addAttribute('slug','');
+
+					$children->attributes()->slug = utf8_encode($slug);
+				}
+
+				$obj->asXml( FILE_XML_CATEGORIES );
+
+				echo Html::p( array('class'=>'pass', 'content'=>'Categories updated...') );
 
 			?>
 		</section>

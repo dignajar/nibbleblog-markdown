@@ -168,6 +168,16 @@ article.post	img:not(.captcha) {
 	max-width:100%;
 }
 
+article.post	img.align_left {
+	margin: 5px 10px 5px 0px;
+	float: left;
+}
+
+article.post	img.align_right {
+	margin: 5px 0px 5px 10px;
+	float: right;
+}
+
 article.post 	blockquote {
 	font-size: 1.1em;
 	font-style: italic;
@@ -192,7 +202,7 @@ article.post	p {
 }
 
 article.post	div.video_embed {
-
+	display: block;
 }
 
 /* ========== POST FOOTER ========== */
@@ -214,15 +224,34 @@ article.post	footer.post		a {
 }
 
 /* ============================== */
+/* SOCIAL */
+/* ============================== */
+div.share {
+	float: right;
+	overflow:auto;
+}
+
+div.share	a.twitter {
+    background: url("img/32twitter.png") no-repeat right center;
+    display: block;
+    line-height: 32px;
+    padding-right: 32px;
+    color: #333;
+    opacity: 0.5;
+}
+
+div.share	a.twitter:hover {
+	opacity: 1;
+}
+
+/* ============================== */
 /* COMMENT LIST */
 /* ============================== */
 #comment_list {
 	margin-top: 30px;
-	width: 70%;
 }
 
 #comment_list	h2 {
-	font-style: italic;
 	font-weight: normal;
 	margin: 10px 0;
 }
@@ -244,7 +273,6 @@ article.post	footer.post		a {
 }
 
 #comment_list	span.content {
-	font-style: italic;
 	display: block;
 }
 
@@ -262,7 +290,6 @@ article.post	footer.post		a {
 }
 
 #comment_form	h2 {
-	font-style: italic;
 	font-weight: normal;
 	margin: 10px 0;
 }

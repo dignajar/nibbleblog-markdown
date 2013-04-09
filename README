@@ -1,25 +1,12 @@
 ====== Nibbleblog ======
-Version: Beta on Github
-Codename:
-Release date:
+Version: 3.5.2
+Codename: Easter egg
+Release date: 08/04/2013
 
 Site: http://nibbleblog.com
 Blog: http://blog.nibbleblog.com
 Help & Support: http://forum.nibbleblog.com
 Wiki: http://wiki.nibbleblog.com
-
-===== Intallation =====
-1. Unzip the downloaded file
-2. Upload all files on your hosting or local server via FTP, Shell, Cpanel, others.
-3. With your browser, go to the URL of your web. Example: www.domain.com
-4. Complete the form
-5. Done! you have installed Nibbleblog
-
-===== System Requirements =====
-* PHP v5.2 or higher
-* PHP module - DOM
-* PHP module - SimpleXML
-* Directory "content" writable by PHP
 
 ===== About the author =====
 Name: Diego Najar

@@ -24,20 +24,16 @@ class DB_POSTS {
 
 		private $last_insert_id;
 
-		private $settings;
-
 /*
 ======================================================================================
 	CONSTRUCTORS
 ======================================================================================
 */
-		function DB_POSTS($file, $settings)
+		function DB_POSTS($file)
 		{
-			$this->file_xml = $file;
-
-			if(file_exists($this->file_xml))
+			if(file_exists($file))
 			{
-				$this->settings = $settings;
+				$this->file_xml = $file;
 
 				$this->last_insert_id = max($this->get_autoinc() - 1, 0);
 
@@ -45,13 +41,11 @@ class DB_POSTS {
 				$this->files_count = 0;
 
 				$this->obj_xml = new NBXML($this->file_xml, 0, TRUE, '', FALSE);
-			}
-			else
-			{
-				return(false);
+
+				return true;
 			}
 
-			return(true);
+			return false;
 		}
 
 /*
@@ -362,6 +356,7 @@ class DB_POSTS {
 		// File name: ID_POST.ID_CATEGORY.ID_USER.NULL.YYYY.MM.DD.HH.mm.ss.xml
 		private function get_items($file)
 		{
+			global $_LANG;
 			$obj_xml = new NBXML(PATH_POSTS . $file, 0, TRUE, '', FALSE);
 
 			$file_info = explode('.', $file);
@@ -390,10 +385,6 @@ class DB_POSTS {
 
 			$tmp_array['allow_comments']	= (bool) ((int)$obj_xml->getChild('allow_comments'))==1;
 
-			// DATE
-			$tmp_array['pub_date'] = Date::format($tmp_array['pub_date_unix'], $this->settings['timestamp_format']);
-			$tmp_array['mod_date'] = Date::format($tmp_array['mod_date_unix'], $this->settings['timestamp_format']);
-
 			// CONTENT
 			$tmp_array['content'][0] = $content;
 
@@ -405,6 +396,9 @@ class DB_POSTS {
 				$tmp_array['read_more'] = true;
 			}
 
+			// Permalink
+			$tmp_array['permalink'] = HTML_PATH_ROOT.'index.php?controller=post&action=view&id_post='.$tmp_array['id'];
+
 			// POST TYPE
 			if($tmp_array['type']=='video')
 			{
@@ -413,32 +407,6 @@ class DB_POSTS {
 			elseif($tmp_array['type']=='quote')
 			{
 				$tmp_array['quote']			= (string) $obj_xml->getChild('quote');
-			}
-
-			// FRIENDLY URLS
-			if( $this->settings['friendly_urls'] )
-			{
-				if(  Text::not_empty($tmp_array['slug']) )
-				{
-					$slug = $tmp_array['slug'];
-				}
-				else
-				{
-					if( Text::not_empty($tmp_array['title']))
-					{
-						$slug = Text::clean_url($tmp_array['title']);
-					}
-					else
-					{
-						$slug = $tmp_array['type'];
-					}
-				}
-
-				$tmp_array['permalink'] = HTML_PATH_ROOT.'post-'.$tmp_array['id'].'/'.$slug;
-			}
-			else
-			{
-				$tmp_array['permalink'] = HTML_PATH_ROOT.'index.php?controller=post&action=view&id_post='.$tmp_array['id'];
 			}
 
 			return( $tmp_array );

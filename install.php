@@ -40,20 +40,25 @@ $blog_domain = getenv('HTTP_HOST');
 $blog_base_path = '/';
 $blog_address = 'http://'.$blog_domain;
 $installation_complete = false;
-$languagues = array(
+$languages = array(
 	'cs_CZ'=>'čeština',
 	'de_DE'=>'Deutsch',
 	'en_US'=>'English',
 	'es_ES'=>'Español',
-	//'fa_IR'=>'فارسی',
-	//'fr_FR'=>'Français',
+	'fr_FR'=>'Français',
+	'fa_IR'=>'فارسی',
+	'hu_HU'=>'Magyar',
 	'pl_PL'=>'Polski',
 	'pt_PT'=>'Português',
 	'ru_RU'=>'Pyccĸий',
-	'vi_VI'=>'Tiếng Việt'
-	//'tr_TR'=>'Tϋrkçe',
-	//'zh_TW'=>'繁體中文'
+	'tr_TR'=>'Tϋrkçe',
+	'vi_VI'=>'Tiếng Việt',
+	'zh_TW'=>'繁體中文'
 );
+
+$languages_html = array();
+foreach($languages as $raw=>$lang)
+	$languages_html[$raw] = $lang;
 
 // ============================================================================
 //	SYSTEM
@@ -108,37 +113,54 @@ Date::set_timezone('UTC');
 		$xml .= '<config>';
 		$xml .= '</config>';
 		$obj = new NBXML($xml, 0, FALSE, '', FALSE);
+
+		// General
 		$obj->addChild('name',					$_POST['name']);
 		$obj->addChild('slogan',				$_POST['slogan']);
 		$obj->addChild('footer',				$_LANG['POWERED_BY_NIBBLEBLOG']);
-		$obj->addChild('about',					'');
-		$obj->addChild('language',				$_GET['language']);
-		$obj->addChild('timezone',				'UTC');
-		$obj->addChild('theme',					'clean');
+		$obj->addChild('advanced_post_options', false);
+
+		// Advanced
 		$obj->addChild('url',					$_POST['url']);
 		$obj->addChild('path',					$_POST['path']);
-		$obj->addChild('items_rss',				'4');
-		$obj->addChild('items_page',			'6');
-		$obj->addChild('timestamp_format',		'%d %B, %Y');
-		$obj->addChild('advanced_post_options',	'0');
-		$obj->addChild('locale',				$_GET['language']);
-		$obj->addChild('friendly_urls',			0);
+		$obj->addChild('items_rss',				4);
+		$obj->addChild('items_page',			6);
 
-		$obj->addChild('img_resize',			1);
+		// Regional
+		$obj->addChild('language',				$_GET['language']);
+		$obj->addChild('timezone',				'UTC');
+		$obj->addChild('timestamp_format',		'%d %B, %Y');
+		$obj->addChild('locale',				$_GET['language']);
+
+		// Images
+		$obj->addChild('img_resize',			true);
 		$obj->addChild('img_resize_width',		1000);
 		$obj->addChild('img_resize_height',		600);
 		$obj->addChild('img_resize_option',		'auto');
-
-		$obj->addChild('img_thumbnail',			1);
+		$obj->addChild('img_thumbnail',			true);
 		$obj->addChild('img_thumbnail_width',	190);
 		$obj->addChild('img_thumbnail_height',	190);
 		$obj->addChild('img_thumbnail_option',	'landscape');
 
-		$obj->addChild('notification_comments',			1);
-		$obj->addChild('notification_session_fail',		0);
-		$obj->addChild('notification_session_start',	0);
+		// Theme
+		$obj->addChild('theme',					'simpler');
+
+		// Notifications
+		$obj->addChild('notification_comments',			true);
+		$obj->addChild('notification_session_fail',		false);
+		$obj->addChild('notification_session_start',	false);
 		$obj->addChild('notification_email_to',			$_POST['email']);
 		$obj->addChild('notification_email_from',		'noreply@'.$blog_domain);
+
+		// SEO
+		$obj->addChild('seo_site_title',		$_POST['name'].' - '.$_POST['slogan']);
+		$obj->addChild('seo_site_description',	'');
+		$obj->addChild('seo_keywords',			'');
+		$obj->addChild('seo_robots',			'');
+		$obj->addChild('seo_google_code',		'');
+		$obj->addChild('seo_bing_code',			'');
+		$obj->addChild('seo_author',			'');
+		$obj->addChild('friendly_urls',			false);
 
 		$obj->asXml( FILE_XML_CONFIG );
 
@@ -150,12 +172,15 @@ Date::set_timezone('UTC');
 		$node = $obj->addChild('category', '');
 		$node->addAttribute('id',0);
 		$node->addAttribute('name', $_LANG['UNCATEGORIZED']);
+		$node->addAttribute('slug', 'uncategorized');
 		$node = $obj->addChild('category', '');
 		$node->addAttribute('id',1);
 		$node->addAttribute('name', $_LANG['MUSIC']);
+		$node->addAttribute('slug', 'music');
 		$node = $obj->addChild('category', '');
 		$node->addAttribute('id',2);
 		$node->addAttribute('name', $_LANG['VIDEOS']);
+		$node->addAttribute('slug', 'videos');
 		$obj->asXml( FILE_XML_CATEGORIES );
 
 		// comments.xml
@@ -163,12 +188,12 @@ Date::set_timezone('UTC');
 		$xml .= '<comments autoinc="0">';
 		$xml .= '</comments>';
 		$obj = new NBXML($xml, 0, FALSE, '', FALSE);
-		$obj->addChild('moderate', 1);
-		$obj->addChild('sanitize', 1);
-		$obj->addChild('monitor_enable', 0);
+		$obj->addChild('moderate', true);
+		$obj->addChild('sanitize', true);
+		$obj->addChild('monitor_enable', false);
 		$obj->addChild('monitor_api_key', '');
-		$obj->addChild('monitor_spam_control', '0.75');
-		$obj->addChild('monitor_auto_delete', 0);
+		$obj->addChild('monitor_spam_control', 0.75);
+		$obj->addChild('monitor_auto_delete', false);
 		$obj->asXml( FILE_XML_COMMENTS );
 
 		// post.xml
@@ -300,10 +325,16 @@ Date::set_timezone('UTC');
 			border: 1px solid #C4C4C4;
 			border-radius: 2px;
 			color: #858585;
-			padding: 8px;
-			outline:none;
+			padding: 10px 8px;
+			outline:none; /* not focus border on chrome */
 			resize: none;
-			margin-bottom: 15px;
+			margin-bottom: 17px;
+		}
+
+		select {
+			width: 100%;
+			padding: 6px;
+			margin-bottom: 17px;
 		}
 
 		label {
@@ -323,12 +354,6 @@ Date::set_timezone('UTC');
 			text-align: center;
 			font-size: 0.9em;
 		}
-		div.lang {
-			margin-right: -20px;
-			margin-top: -10px;
-			overflow: auto;
-			text-align: center;
-		}
 
 		#head {
 			margin-bottom: 20px;
@@ -343,16 +368,6 @@ Date::set_timezone('UTC');
 		<header id="head">
 			<?php
 				echo Html::h1( array('content'=>$_LANG['WELCOME_TO_NIBBLEBLOG']) );
-
-				if(!$installation_complete)
-				{
-					echo '<div class="lang">';
-
-					foreach( $languagues as $key=>$value)
-						echo '<a class="lang" href="./install.php?language='.$key.'">'.$value.'</a><span style="margin:0 5px;">·</span>';
-
-					echo '</div>';
-				}
 			?>
 		</header>
 
@@ -445,6 +460,10 @@ Date::set_timezone('UTC');
 			<?php
 				echo Html::form_open( array('id'=>'js_form', 'name'=>'form', 'method'=>'post') );
 
+					// LANGUAGE
+					echo Html::label( array('content'=>$_LANG['LANGUAGE'], 'class'=>'blocked') );
+					echo Html::select( array('id'=>'js_language', 'name'=>'language'), $languages_html, isset($_GET['language'])?$_GET['language']:'en_US');
+
 					echo Html::label( array('content'=>$_LANG['BLOG_TITLE']) );
 					echo Html::input( array('id'=>'js_name', 'name'=>'name', 'type'=>'text', 'autocomplete'=>'off', 'maxlength'=>'254', 'value'=>'') );
 
@@ -493,6 +512,13 @@ Date::set_timezone('UTC');
 			else
 				echo '$("#dependencies").show()';
 		?>
+
+		$("#js_language").change(function () {
+			var locale = $("#js_language option:selected").val();
+			var url = location.pathname+"?language="+locale;
+			console.log("Nibbleblog: Url="+url);
+			location.replace(url);
+		});
 
 		$("form").submit(function(e){
 			var username = $("#js_username");
