@@ -41,25 +41,14 @@ class Comment {
 	PUBLIC METHODS
 ======================================================================================
 */
+
 	// Return TRUE if the comment is inserted
 	// Return FALSE if the comment is spam or need moderation
 	// Return -1 errors(comment flooding, post doesn't allow comments, others)
-	public function add()
+	public function add($data)
 	{
 		// Flood protection
-		if(Session::get_last_comment_at() + COMMENT_INTERVAL > time())
-		{
-			return -1;
-		}
-
-		// Sleep
-		sleep(2);
-
-		// Comment data from session
-		$data = Session::get_comment_array();
-
-		// If the post doesn't allow comments
-		if(!$data['post_allow_comments'])
+		if( $this->get_last_time() + COMMENT_INTERVAL > time())
 		{
 			return -1;
 		}
@@ -100,17 +89,12 @@ class Comment {
 
 			if($data['type']!='spam')
 			{
-				$text = 'Comment: '.$data['content'];
-
 				// Add notification
-				$this->db_notification->add('comment', $this->settings['notification_comments'], 'YOU_HAVE_A_NEW_COMMENT', $text);
+				$this->db_notification->add('comment', $this->settings['notification_comments'], array('ip'=>$data['author_ip'], 'author_name'=>$data['author_name'], 'author_email'=>$data['author_email'], 'comment'=>$data['content']));
 			}
 
-			Session::set_last_comment_at(time());
+			$this->set_last_time();
 		}
-
-		// Clean session
-		Session::reset();
 
 		return $data['type']=='NULL';
 	}
@@ -155,6 +139,68 @@ class Comment {
 	public function get_settings()
 	{
 		return($this->db->get_settings());
+	}
+
+	public function disqus_shortname()
+	{
+		return $this->comment_settings['disqus_shortname'];
+	}
+
+	public function facebook_appid()
+	{
+		return $this->comment_settings['facebook_appid'];
+	}
+
+	public function disqus_enabled()
+	{
+		return !empty($this->comment_settings['disqus_shortname']);
+	}
+
+	public function facebook_enabled()
+	{
+		return !empty($this->comment_settings['facebook_appid']);
+	}
+
+	// DEPRACTED
+	public function get_hash()
+	{
+		return Session::get_comment('hash');
+	}
+
+	// DEPRACTED
+	public function set_hash()
+	{
+		$hash = Crypt::get_hash(time(),time());
+		Session::set('hash', $hash);
+	}
+
+	public function get_last_time()
+	{
+		return Session::get_last_comment_at();
+	}
+
+	public function set_last_time()
+	{
+		Session::set_last_comment_at(time());
+	}
+
+	/*
+	 * Set comment field
+	 */
+	public function set_form($field, $text)
+	{
+		Session::set_comment($field, $text);
+	}
+
+	/*
+	 * Get comment field
+	 */
+	public function form($field)
+	{
+		$data = Session::get_comment($field);
+		Session::set_comment($field, '');
+
+		return $data;
 	}
 
 /*

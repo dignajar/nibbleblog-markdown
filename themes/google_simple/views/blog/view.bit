@@ -1,23 +1,30 @@
 <?php
 
-	if(empty($posts))
+// Disqus and Facebook comments
+if( !empty($theme['disqus_account']) )
+{
+	include('includes/comments_disqus.bit');
+}
+elseif( !empty($theme['facebook_appId']) )
+{
+	include('includes/comments_facebook.bit');
+}
+
+// There are no posts
+if(empty($posts))
+{
+	echo '<p>'.$Language->get('there are no posts').'</p>';
+}
+else
+{
+	// Print each post
+	foreach($posts as $post)
 	{
-		echo '<p>'.$_LANG['THERE_ARE_NO_POSTS'].'</p>';
+		include('includes/post.bit');
 	}
-	else
-	{
-		// Variable $posts has all post for the page
-		foreach($posts as $post)
-		{
-			echo '<article class="post">';
+}
 
-				include('includes/post_view.bit');
-
-			echo '</article>';
-		}
-
-		// Include the pager
-		include('includes/pager.bit');
-	}
+// Pager
+include('includes/pager.bit');
 
 ?>

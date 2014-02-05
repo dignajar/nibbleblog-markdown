@@ -11,14 +11,19 @@
 
 class Filesystem {
 
+	public static function get_images($regex)
+	{
+		return self::ls(PATH_UPLOAD, $regex, '*', false, false, false);
+	}
+
 	// Devuelve un arreglo con el listado de archivos
 	// $path con una barra al final, ej: /home/
-	// $ext : xml
 	// $file_expression : *.0.*.*.*.*.*.*.*.*
+	// $ext : xml
 	// $flag_dir : si quiero listar directorios
 	// $sort_asc_numeric : ordeno ascedente numerico
 	// $sort_desc_numeric : ordeno descendente numerico
-	public static function ls($path, $file_expression = NULL, $ext, $flag_dir = false, $sort_asc_numeric = false, $sort_desc_numeric = false)
+	public static function ls($path, $file_expression = NULL, $ext, $flag_dir = false, $sort_asc_numeric = false, $sort_desc_numeric = true)
 	{
 		if($flag_dir)
 		{

@@ -4,14 +4,17 @@
 	<meta charset="utf-8">
 	<meta name='robots' content='noindex,nofollow' />
 
-	<title>Nibbleblog - Login</title>
+	<title>Nibbleblog</title>
 
 	<link rel="stylesheet" type="text/css" href="<?php echo HTML_PATH_ADMIN_TEMPLATES.'default/css/normalize.css' ?>" />
 	<link rel="stylesheet" type="text/css" href="<?php echo HTML_PATH_ADMIN_TEMPLATES.'login/css/main.css' ?>" />
 
-	<!-- JAVASCRIPT -->
+	<!-- Javascript -->
 	<script charset="utf-8" src="<?php echo HTML_PATH_ADMIN_JS.'system.php' ?>"></script>
 	<script charset="utf-8" src="<?php echo HTML_PATH_ADMIN_JS.'functions.js' ?>"></script>
+
+	<!-- FAVICON -->
+	<link rel="shortcut icon" href="<?php echo HTML_PATH_ADMIN_TEMPLATES.'default/css/img/favicon.ico' ?>" type="image/x-icon" />
 </head>
 <body>
 
@@ -19,17 +22,14 @@
 
 		<?php
 			// LAYOUT_TITLE defined on controller
-			echo '<div class="title">'.LAYOUT_TITLE.'</div>';
+			echo '<div class="title">'.$layout['title'].'</div>';
 
 			// ALERT
-			if( (isset($_SESSION['session_alert'])) && ($_SESSION['session_alert']['active']) )
-			{
-				echo '<div id="alert">'.$_SESSION['session_alert']['msg'].'</div>';
-				$_SESSION['session_alert']['active'] = false;
-			}
+			if(Session::get_error())
+				echo '<div id="alert">'.Session::get_alert().'</div>';
 
 			// LAYOUT_VIEW defined on controller
-			include(PATH_ADMIN_VIEW. LAYOUT_VIEW);
+			include(PATH_ADMIN_VIEW.$layout['view']);
 		?>
 
 	</div>

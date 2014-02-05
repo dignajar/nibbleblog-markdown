@@ -9,45 +9,52 @@
  * See COPYRIGHT.txt and LICENSE.txt.
 */
 
-if( file_exists('content/private') || file_exists('content/public') )
-	exit('Blog already installed');
+/*
+ * For 1-Click Setup
+ * What you need to install Nibbleblog without the default form.
+ * You can delete/replace this file, is independent from the blog, it only for install.
+ *
+ * $_POST = array('name', 'slogan', 'url', 'path', 'email', 'username', 'password')
+ *
+ * $_POST['name'] = Blog name
+ * $_POST['slogan'] = Blog slogan
+ * $_POST['url'] = Complete URL of your blog, example: http://www.mysite.com/blog/
+ * $_POST['path'] = Relative directory of your blog on the server, example: /blog/
+ * $_POST['email'] = Admin's email
+ * $_POST['username'] = Admin's username
+ * $_POST['password'] = Admin's password in plain text
+ *
+*/
 
-require('admin/boot/rules/1-fs_php.bit');
-require('admin/boot/rules/99-constants.bit');
-
-// DB
-require(PATH_DB . 'nbxml.class.php');
-require(PATH_DB . 'db_posts.class.php');
-
-// HELPERS
-require(PATH_HELPERS . 'crypt.class.php');
-require(PATH_HELPERS . 'date.class.php');
-require(PATH_HELPERS . 'filesystem.class.php');
-require(PATH_HELPERS . 'html.class.php');
-require(PATH_HELPERS . 'net.class.php');
-require(PATH_HELPERS . 'number.class.php');
-require(PATH_HELPERS . 'redirect.class.php');
-require(PATH_HELPERS . 'text.class.php');
-require(PATH_HELPERS . 'validation.class.php');
-
-// ============================================================================
+// =====================================================================
 //	VARIABLES
-// ============================================================================
+// =====================================================================
 $permissions_dir = 0755;
+
 $php_modules = array();
-$dependencies = true;
-$blog_domain = getenv('HTTP_HOST');
-$blog_base_path = '/';
-$blog_address = 'http://'.$blog_domain;
+
 $installation_complete = false;
+
+$dependencies = true;
+
+$domain = getenv('HTTP_HOST');
+
+$base_path = dirname(getenv('SCRIPT_NAME'));
+if($base_path!='/')
+	$base_path .='/';
+
+$blog_address = 'http://'.$domain.$base_path;
+
 $languages = array(
+	'ar_MA'=>'العربية',
 	'cs_CZ'=>'čeština',
 	'de_DE'=>'Deutsch',
 	'en_US'=>'English',
 	'es_ES'=>'Español',
 	'fr_FR'=>'Français',
-	'fa_IR'=>'فارسی',
+	'fr_IR'=>'فارسی-فارسی',
 	'hu_HU'=>'Magyar',
+	'it_IT'=>'Italiano',
 	'pl_PL'=>'Polski',
 	'pt_PT'=>'Português',
 	'ru_RU'=>'Pyccĸий',
@@ -59,6 +66,31 @@ $languages = array(
 $languages_html = array();
 foreach($languages as $raw=>$lang)
 	$languages_html[$raw] = $lang;
+
+// =====================================================================
+//	FILES
+// =====================================================================
+if( file_exists('content/private') || file_exists('content/public') )
+	exit('Blog already installed... May be you want to <a href="update.php">update</a> ?');
+
+// Boot
+require('admin/boot/rules/1-fs_php.bit');
+require('admin/boot/rules/4-remove_magic.bit');
+require('admin/boot/rules/98-constants.bit');
+
+// CLASS
+require(PATH_DB . 'nbxml.class.php');
+require(PATH_DB . 'db_posts.class.php');
+require(PATH_KERNEL . 'plugin.class.php');
+require(PATH_HELPERS . 'crypt.class.php');
+require(PATH_HELPERS . 'date.class.php');
+require(PATH_HELPERS . 'filesystem.class.php');
+require(PATH_HELPERS . 'html.class.php');
+require(PATH_HELPERS . 'net.class.php');
+require(PATH_HELPERS . 'number.class.php');
+require(PATH_HELPERS . 'redirect.class.php');
+require(PATH_HELPERS . 'text.class.php');
+require(PATH_HELPERS . 'validation.class.php');
 
 // ============================================================================
 //	SYSTEM
@@ -80,12 +112,6 @@ if(!file_exists('content'))
 @rmdir('content/tmp');
 $writing_test = @mkdir('content/tmp');
 
-// BLOG BASE PATH
-if( dirname(getenv('REQUEST_URI')) != '/' )
-{
-	$blog_base_path = dirname(getenv('REQUEST_URI')).'/';
-}
-
 // REGIONAL
 if( !@include( 'languages/'. $_GET['language'] . '.bit' ) )
 {
@@ -99,151 +125,234 @@ Date::set_timezone('UTC');
 //	POST
 // ============================================================================
 
-	if( $_SERVER['REQUEST_METHOD'] == 'POST' )
+if( $_SERVER['REQUEST_METHOD'] == 'POST' )
+{
+	mkdir('content/private',		$permissions_dir, true);
+	mkdir('content/private/plugins',$permissions_dir, true);
+	mkdir('content/public',			$permissions_dir, true);
+	mkdir('content/public/upload',	$permissions_dir, true);
+	mkdir('content/public/posts',	$permissions_dir, true);
+	mkdir('content/public/pages',	$permissions_dir, true);
+	mkdir('content/public/comments',$permissions_dir, true);
+
+	// Config.xml
+	$xml  = '<?xml version="1.0" encoding="utf-8" standalone="yes"?>';
+	$xml .= '<config>';
+	$xml .= '</config>';
+	$obj = new NBXML($xml, 0, FALSE, '', FALSE);
+
+	// General
+	$obj->addChild('name',					$_POST['name']);
+	$obj->addChild('slogan',				$_POST['slogan']);
+	$obj->addChild('footer',				$_LANG['POWERED_BY_NIBBLEBLOG']);
+	$obj->addChild('advanced_post_options', 0);
+
+	// Advanced
+	$obj->addChild('url',					$_POST['url']);
+	$obj->addChild('path',					$_POST['path']);
+	$obj->addChild('items_rss',				4);
+	$obj->addChild('items_page',			6);
+
+	// Regional
+	$obj->addChild('language',				$_GET['language']);
+	$obj->addChild('timezone',				'UTC');
+	$obj->addChild('timestamp_format',		'%d %B, %Y');
+	$obj->addChild('locale',				$_GET['language']);
+
+	// Images
+	$obj->addChild('img_resize',			1);
+	$obj->addChild('img_resize_width',		1000);
+	$obj->addChild('img_resize_height',		600);
+	$obj->addChild('img_resize_quality',	100);
+	$obj->addChild('img_resize_option',		'auto');
+	$obj->addChild('img_thumbnail',			1);
+	$obj->addChild('img_thumbnail_width',	190);
+	$obj->addChild('img_thumbnail_height',	190);
+	$obj->addChild('img_thumbnail_quality',	100);
+	$obj->addChild('img_thumbnail_option',	'landscape');
+
+	// Theme
+	$obj->addChild('theme',					'simpler');
+
+	// Notifications
+	$obj->addChild('notification_comments',			1);
+	$obj->addChild('notification_session_fail',		0);
+	$obj->addChild('notification_session_start',	0);
+	$obj->addChild('notification_email_to',			$_POST['email']);
+	$obj->addChild('notification_email_from',		'noreply@'.$domain);
+
+	// SEO
+	$obj->addChild('seo_site_title',		$_POST['name'].' - '.$_POST['slogan']);
+	$obj->addChild('seo_site_description',	'');
+	$obj->addChild('seo_keywords',			'');
+	$obj->addChild('seo_robots',			'');
+	$obj->addChild('seo_google_code',		'');
+	$obj->addChild('seo_bing_code',			'');
+	$obj->addChild('seo_author',			'');
+	$obj->addChild('friendly_urls',			0);
+
+	// Default Homepage
+	$obj->addChild('default_homepage',		0);
+
+	$obj->asXml( FILE_XML_CONFIG );
+
+	// categories.xml
+	$xml  = '<?xml version="1.0" encoding="utf-8" standalone="yes"?>';
+	$xml .= '<categories autoinc="3">';
+	$xml .= '</categories>';
+	$obj = new NBXML($xml, 0, FALSE, '', FALSE);
+	$node = $obj->addChild('category', '');
+	$node->addAttribute('id',0);
+	$node->addAttribute('name', $_LANG['UNCATEGORIZED']);
+	$node->addAttribute('slug', 'uncategorized');
+	$node->addAttribute('position', 1);
+	$node = $obj->addChild('category', '');
+	$node->addAttribute('id',1);
+	$node->addAttribute('name', $_LANG['MUSIC']);
+	$node->addAttribute('slug', 'music');
+	$node->addAttribute('position', 2);
+	$node = $obj->addChild('category', '');
+	$node->addAttribute('id',2);
+	$node->addAttribute('name', $_LANG['VIDEOS']);
+	$node->addAttribute('slug', 'videos');
+	$node->addAttribute('position', 3);
+	$obj->asXml( FILE_XML_CATEGORIES );
+
+	// tags.xml
+	$xml  = '<?xml version="1.0" encoding="utf-8" standalone="yes"?>';
+	$xml .= '<tags autoinc="0">';
+	$xml .= '<list></list>';
+	$xml .= '<links></links>';
+	$xml .= '</tags>';
+	$obj = new NBXML($xml, 0, FALSE, '', FALSE);
+	$obj->asXml( FILE_XML_TAGS );
+
+	// comments.xml
+	$xml  = '<?xml version="1.0" encoding="utf-8" standalone="yes"?>';
+	$xml .= '<comments autoinc="0">';
+	$xml .= '</comments>';
+	$obj = new NBXML($xml, 0, FALSE, '', FALSE);
+	$obj->addChild('moderate', 1);
+	$obj->addChild('sanitize', 1);
+	$obj->addChild('monitor_enable', 0);
+	$obj->addChild('monitor_api_key', '');
+	$obj->addChild('monitor_spam_control', '0.75');
+	$obj->addChild('monitor_auto_delete', 0);
+	$obj->addChild('disqus_shortname', '');
+	$obj->addChild('facebook_appid', '');
+	$obj->asXml( FILE_XML_COMMENTS );
+
+	// posts.xml
+	$xml  = '<?xml version="1.0" encoding="utf-8" standalone="yes"?>';
+	$xml .= '<post autoinc="1">';
+	$xml .= '<friendly></friendly>';
+	$xml .= '</post>';
+	$obj = new NBXML($xml, 0, FALSE, '', FALSE);
+
+	$obj->asXml( FILE_XML_POSTS );
+
+	// pages.xml
+	$xml  = '<?xml version="1.0" encoding="utf-8" standalone="yes"?>';
+	$xml .= '<pages autoinc="1">';
+	$xml .= '<friendly></friendly>';
+	$xml .= '</pages>';
+	$obj = new NBXML($xml, 0, FALSE, '', FALSE);
+
+	$obj->asXml( FILE_XML_PAGES );
+
+	// notifications.xml
+	$xml  = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+	$xml .= '<notifications>';
+	$xml .= '</notifications>';
+	$obj = new NBXML($xml, 0, FALSE, '', FALSE);
+	$obj->asXml( FILE_XML_NOTIFICATIONS );
+
+	// users.xml
+	$xml  = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+	$xml .= '<users>';
+	$xml .= '</users>';
+	$obj = new NBXML($xml, 0, FALSE, '', FALSE);
+	$node = $obj->addGodChild('user', array('username'=>$_POST['username']));
+	$node->addChild('id', 0);
+	$node->addChild('session_fail_count', 0);
+	$node->addChild('session_date', 0);
+	$obj->asXml( FILE_XML_USERS );
+
+	// shadow.php
+	$new_salt = Text::random_text(11);
+	$new_hash = Crypt::get_hash($_POST['password'],$new_salt);
+	$text = '<?php $_USER[0]["uid"] = "0"; $_USER[0]["username"] = "'.$_POST['username'].'"; $_USER[0]["password"] = "'.$new_hash.'"; $_USER[0]["salt"] = "'.$new_salt.'"; $_USER[0]["email"] = "'.$_POST['email'].'"; ?>';
+	$file = fopen(FILE_SHADOW, 'w');
+	fputs($file, $text);
+	fclose($file);
+
+	// keys.php
+	$key1 = Crypt::get_hash(Text::random_text(11));
+	$key2 = Crypt::get_hash(Text::random_text(11));
+	$key3 = Crypt::get_hash(Text::random_text(11));
+	$text = '<?php $_KEYS[0] = "nibbl'.$key1.'"; $_KEYS[1] = "eblog'.$key2.'"; $_KEYS[2] = "rulez'.$key3.'"; ?>';
+	$file = fopen(FILE_KEYS, 'w');
+	fputs($file, $text);
+	fclose($file);
+
+	// welcome post
+	$content  = '<p>'.$_LANG['WELCOME_POST_LINE1'].'</p>';
+	$content .= '<p>'.$_LANG['WELCOME_POST_LINE2'].'</p>';
+	$content .= '<p>'.$_LANG['WELCOME_POST_LINE3'].'</p>';
+
+	$content = Text::replace_assoc(
+			array(
+				'{{DASHBOARD_LINK}}'=>'<a href="./admin.php">'.$blog_address.'admin.php</a>',
+				'{{FACEBOOK_LINK}}'=>'<a target="_blank" href="https://www.facebook.com/nibbleblog">Facebook</a>',
+				'{{TWITTER_LINK}}'=>'<a target="_blank" href="https://twitter.com/nibbleblog">Twitter</a>',
+				'{{GOOGLEPLUS_LINK}}'=>'<a target="_blank" href="https://plus.google.com/+Nibbleblog">Google+</a>'
+			),
+			$content
+	);
+
+	$_DB_POST = new DB_POSTS(FILE_XML_POSTS);
+	$_DB_POST->add( array('id_user'=>0, 'id_cat'=>0, 'type'=>'simple', 'description'=>$_LANG['WELCOME_POST_TITLE'], 'title'=>$_LANG['WELCOME_POST_TITLE'], 'content'=>$content, 'allow_comments'=>'1', 'sticky'=>'0', 'slug'=>'welcome-post') );
+
+	// Plugins
+	$plugins = array('pages', 'categories', 'latest_posts');
+	foreach($plugins as $plugin)
 	{
-		mkdir('content/private',		$permissions_dir, true);
-		mkdir('content/private/plugins',$permissions_dir, true);
-		mkdir('content/public',			$permissions_dir, true);
-		mkdir('content/public/upload',	$permissions_dir, true);
-		mkdir('content/public/posts',	$permissions_dir, true);
-		mkdir('content/public/comments',$permissions_dir, true);
+		include_once(PATH_PLUGINS.$plugin.'/plugin.bit');
+		$class = 'PLUGIN_'.strtoupper($plugin);
+		$obj = new $class;
 
-		// Config.xml
-		$xml  = '<?xml version="1.0" encoding="utf-8" standalone="yes"?>';
-		$xml .= '<config>';
-		$xml .= '</config>';
-		$obj = new NBXML($xml, 0, FALSE, '', FALSE);
+		if( @!include(PATH_PLUGINS.$plugin.'/languages/'.$_GET['language'].'.bit') )
+			include(PATH_PLUGINS.$plugin.'/languages/en_US.bit');
 
-		// General
-		$obj->addChild('name',					$_POST['name']);
-		$obj->addChild('slogan',				$_POST['slogan']);
-		$obj->addChild('footer',				$_LANG['POWERED_BY_NIBBLEBLOG']);
-		$obj->addChild('advanced_post_options', 0);
+		$merge = array_merge($_LANG, $_PLUGIN_CONFIG['LANG']);
 
-		// Advanced
-		$obj->addChild('url',					$_POST['url']);
-		$obj->addChild('path',					$_POST['path']);
-		$obj->addChild('items_rss',				4);
-		$obj->addChild('items_page',			6);
+		$obj->set_lang($merge);
 
-		// Regional
-		$obj->addChild('language',				$_GET['language']);
-		$obj->addChild('timezone',				'UTC');
-		$obj->addChild('timestamp_format',		'%d %B, %Y');
-		$obj->addChild('locale',				$_GET['language']);
+		$obj->set_attributes(
+		array(
+			'name'=>$_PLUGIN_CONFIG['LANG']['NAME'],
+			'description'=>$_PLUGIN_CONFIG['LANG']['DESCRIPTION'],
+			'author'=>$_PLUGIN_CONFIG['DATA']['author'],
+			'version'=>$_PLUGIN_CONFIG['DATA']['version'],
+			'url'=>$_PLUGIN_CONFIG['DATA']['url'],
+			'display'=>isset($_PLUGIN_CONFIG['DATA']['display'])?false:true
+		));
 
-		// Images
-		$obj->addChild('img_resize',			1);
-		$obj->addChild('img_resize_width',		1000);
-		$obj->addChild('img_resize_height',		600);
-		$obj->addChild('img_resize_option',		'auto');
-		$obj->addChild('img_thumbnail',			1);
-		$obj->addChild('img_thumbnail_width',	190);
-		$obj->addChild('img_thumbnail_height',	190);
-		$obj->addChild('img_thumbnail_option',	'landscape');
+		include(PATH_PLUGINS.$plugin.'/languages/en_US.bit');
+		$obj->set_slug_name($_PLUGIN_CONFIG['LANG']['NAME']);
 
-		// Theme
-		$obj->addChild('theme',					'simpler');
-
-		// Notifications
-		$obj->addChild('notification_comments',			1);
-		$obj->addChild('notification_session_fail',		0);
-		$obj->addChild('notification_session_start',	0);
-		$obj->addChild('notification_email_to',			$_POST['email']);
-		$obj->addChild('notification_email_from',		'noreply@'.$blog_domain);
-
-		// SEO
-		$obj->addChild('seo_site_title',		$_POST['name'].' - '.$_POST['slogan']);
-		$obj->addChild('seo_site_description',	'');
-		$obj->addChild('seo_keywords',			'');
-		$obj->addChild('seo_robots',			'');
-		$obj->addChild('seo_google_code',		'');
-		$obj->addChild('seo_bing_code',			'');
-		$obj->addChild('seo_author',			'');
-		$obj->addChild('friendly_urls',			0);
-
-		$obj->asXml( FILE_XML_CONFIG );
-
-		// categories.xml
-		$xml  = '<?xml version="1.0" encoding="utf-8" standalone="yes"?>';
-		$xml .= '<categories autoinc="3">';
-		$xml .= '</categories>';
-		$obj = new NBXML($xml, 0, FALSE, '', FALSE);
-		$node = $obj->addChild('category', '');
-		$node->addAttribute('id',0);
-		$node->addAttribute('name', $_LANG['UNCATEGORIZED']);
-		$node->addAttribute('slug', 'uncategorized');
-		$node = $obj->addChild('category', '');
-		$node->addAttribute('id',1);
-		$node->addAttribute('name', $_LANG['MUSIC']);
-		$node->addAttribute('slug', 'music');
-		$node = $obj->addChild('category', '');
-		$node->addAttribute('id',2);
-		$node->addAttribute('name', $_LANG['VIDEOS']);
-		$node->addAttribute('slug', 'videos');
-		$obj->asXml( FILE_XML_CATEGORIES );
-
-		// comments.xml
-		$xml  = '<?xml version="1.0" encoding="utf-8" standalone="yes"?>';
-		$xml .= '<comments autoinc="0">';
-		$xml .= '</comments>';
-		$obj = new NBXML($xml, 0, FALSE, '', FALSE);
-		$obj->addChild('moderate', 1);
-		$obj->addChild('sanitize', 1);
-		$obj->addChild('monitor_enable', 0);
-		$obj->addChild('monitor_api_key', '');
-		$obj->addChild('monitor_spam_control', '0.75');
-		$obj->addChild('monitor_auto_delete', 0);
-		$obj->asXml( FILE_XML_COMMENTS );
-
-		// post.xml
-		$xml  = '<?xml version="1.0" encoding="utf-8" standalone="yes"?>';
-		$xml .= '<post autoinc="1">';
-		$xml .= '</post>';
-		$obj = new NBXML($xml, 0, FALSE, '', FALSE);
-		$node = $obj->addChild('sticky', '');
-		$obj->asXml( FILE_XML_POST );
-
-		// notifications.xml
-		$xml  = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
-		$xml .= '<notifications>';
-		$xml .= '</notifications>';
-		$obj = new NBXML($xml, 0, FALSE, '', FALSE);
-		$obj->asXml( FILE_XML_NOTIFICATIONS );
-
-		// shadow.php
-		$new_salt = Text::random_text(11);
-		$new_hash = Crypt::get_hash($_POST['password'],$new_salt);
-		$text = '<?php $_USER[0]["uid"] = "0"; $_USER[0]["username"] = "'.$_POST['username'].'"; $_USER[0]["password"] = "'.$new_hash.'"; $_USER[0]["salt"] = "'.$new_salt.'"; $_USER[0]["email"] = "'.$_POST['email'].'"; ?>';
-		$file = fopen(FILE_SHADOW, 'w');
-		fputs($file, $text);
-		fclose($file);
-
-		// keys.php
-		$key1 = Crypt::get_hash(Text::random_text(11));
-		$key2 = Crypt::get_hash(Text::random_text(11));
-		$key3 = Crypt::get_hash(Text::random_text(11));
-		$text = '<?php $_KEYS[0] = "nibbl'.$key1.'"; $_KEYS[1] = "eblog'.$key2.'"; $_KEYS[2] = "rulez'.$key3.'"; ?>';
-		$file = fopen(FILE_KEYS, 'w');
-		fputs($file, $text);
-		fclose($file);
-
-		// welcome post
-		$content = '<p>'.$_LANG['WELCOME_POST_LINE1'].'</p>';
-		$content .= '<p>'.$_LANG['WELCOME_POST_LINE2'].'  <a href="./admin.php">'.$blog_address.$blog_base_path.'admin.php</a></p>';
-		$content .= '<p>'.$_LANG['WELCOME_POST_LINE3'].'  <a target="_blank" href="http://forum.nibbleblog.com">http://forum.nibbleblog.com</a></p>';
-		$content .= '<p>'.$_LANG['WELCOME_POST_LINE4'].'  <a target="_blank" href="http://www.facebook.com/nibbleblog">https://www.facebook.com/nibbleblog</a></p>';
-		$_DB_POST = new DB_POSTS(FILE_XML_POST, null);
-		$_DB_POST->add( array('id_user'=>0, 'id_cat'=>0, 'type'=>'simple', 'description'=>$_LANG['WELCOME_POST_TITLE'], 'title'=>$_LANG['WELCOME_POST_TITLE'], 'content'=>$content, 'allow_comments'=>'1', 'sticky'=>'0', 'slug'=>'welcome-post') );
-
-		$installation_complete = true;
+		$obj->install(0);
 	}
+
+	$installation_complete = true;
+}
 ?>
 
 <!DOCTYPE HTML>
 <html>
 <head>
 	<meta charset="utf-8">
+	<meta name='robots' content='noindex,nofollow' />
 	<title>Nibbleblog Installer</title>
 
 	<script src="./admin/js/jquery/jquery.js"></script>
@@ -252,31 +361,39 @@ Date::set_timezone('UTC');
 	<style type="text/css">
 		body {
 			font-family: arial,sans-serif;
-			background-color: #FFF;
 			margin: 0;
 			padding: 0;
-			font-size: 0.875em;
+			font-size: 62.5%;
 			color: #555;
+			background: url("admin/templates/easy4/css/img/grey.png") repeat rgba(0, 0, 0, 0);
 		}
 
 		#container {
-			background: none repeat scroll 0 0 #F9F9F9;
-			border: 1px solid #EBEBEB;
-			border-radius: 3px 3px 3px 3px;
 			margin: 50px auto;
 			max-width: 700px;
 			padding: 20px 30px;
 			width: 60%;
-			box-shadow: 0 0 4px rgba(0, 0, 0, 0.05);
+			box-shadow: 1px 0px 2px rgba(0, 0, 0, 0.08);
+
+			background: rgba(255, 255, 255, 0.6);
+			border: 1px solid #CCC;
+			border-radius: 3px 3px 3px 3px;
 		}
 
 		h1 {
 			margin: 0 0 20px 0;
 			text-align: center;
+			font-size: 2.6em;
+			font-weight: normal;
 		}
 
 		h2 {
 			color: #6C7479;
+			font-size: 2em;
+		}
+
+		p {
+			font-size: 1.3em;
 		}
 
 		a {
@@ -290,7 +407,6 @@ Date::set_timezone('UTC');
 		}
 
 		a.lang {
-			font-size: 0.9em;
 			display: inline-block;
 		}
 
@@ -299,6 +415,7 @@ Date::set_timezone('UTC');
 			padding: 10px;
 			overflow: auto;
 			margin-bottom: 5px;
+			font-size: 1.3em;
 		}
 
 		div.status_pass {
@@ -317,42 +434,59 @@ Date::set_timezone('UTC');
 			display: none;
 		}
 
-		input[type="text"] {
+		input[type="text"],
+		input[type="password"],
+		textarea {
 			-moz-box-sizing: border-box;
 			-webkit-box-sizing: border-box;
 			box-sizing: border-box;
 			width: 100%;
-			border: 1px solid #C4C4C4;
+			border: 1px solid #ccc;
 			border-radius: 2px;
 			color: #858585;
-			padding: 10px 8px;
+			padding: 10px 8px 10px 8px;
 			outline:none; /* not focus border on chrome */
 			resize: none;
-			margin-bottom: 17px;
+		}
+
+		input[type="submit"] {
+			border: 1px solid rgba(0, 0, 0, 0.1);
+			border-radius: 2px 2px 2px 2px;
+			box-shadow: 0 0 1px rgba(0, 0, 0, 0.05);
+			color: #444444;
+			cursor: pointer;
+			display: inline-block;
+			font-size: 1.3em;
+			padding: 7px 33px;
+			background: #F1F1F1;
+			background: -moz-linear-gradient(center top , #F5F5F5, #F1F1F1);
+			background: -webkit-gradient(linear, left top, left bottom, from(#F5F5F5), to(#F1F1F1));
+			margin-top: 20px;
+		}
+
+		input[type="submit"]:hover {
+			background: #E1E1E1;
+			background: -moz-linear-gradient(center top , #EFEFEF, #E1E1E1);
+			background: -webkit-gradient(linear, left top, left bottom, from(#EFEFEF), to(#E1E1E1));
 		}
 
 		select {
 			width: 100%;
 			padding: 6px;
-			margin-bottom: 17px;
 		}
 
 		label {
 			color: #333;
-			margin-bottom:2px;
+			margin-bottom:3px;
 			display:block;
-			font-size: 0.9em;
-		}
-
-		input[type="submit"] {
-			padding: 3px 20px;
+			font-size: 1.3em;
+			margin-top: 16px;
 		}
 
 		footer {
 			margin: 30px 0;
 			border-top: 1px solid #f1f1f1;
 			text-align: center;
-			font-size: 0.9em;
 		}
 
 		#head {
@@ -383,8 +517,8 @@ Date::set_timezone('UTC');
 				echo Html::h2( array('content'=>$_LANG['INSTALLATION_COMPLETE']) );
 				echo Html::p( array('content'=>$_LANG['INSTALLATION_LINE1']) );
 				echo Html::p( array('content'=>$_LANG['INSTALLATION_LINE2']) );
-				echo Html::p( array('content'=>$_LANG['INSTALLATION_LINE3'].' <a href="./admin.php">'.$blog_address.$blog_base_path.'admin.php</a>') );
-				echo Html::p( array('content'=>$_LANG['INSTALLATION_LINE4'].' <a href="./">'.$blog_address.$blog_base_path.'</a>') );
+				echo Html::p( array('content'=>$_LANG['INSTALLATION_LINE3'].' <a href="./admin.php">'.$blog_address.'admin.php</a>') );
+				echo Html::p( array('content'=>$_LANG['INSTALLATION_LINE4'].' <a href="./">'.$blog_address.'</a>') );
 				echo Html::p( array('content'=>$_LANG['INSTALLATION_LINE5'].' <a href="http://forum.nibbleblog.com">http://forum.nibbleblog.com</a>') );
 			?>
 		</section>
@@ -412,6 +546,21 @@ Date::set_timezone('UTC');
 					echo Html::link( array('class'=>'description', 'content'=>$_LANG['PHP_MODULE'].' - DOM', 'href'=>'http://www.php.net/manual/en/book.dom.php', 'target'=>'_blank') );
 
 					if( in_array('dom', $php_modules) )
+					{
+						echo Html::div( array('class'=>'status_pass', 'content'=>$_LANG['PASS']) );
+					}
+					else
+					{
+						$dependencies = false;
+						echo Html::div( array('class'=>'status_fail', 'content'=>$_LANG['FAIL']) );
+					}
+
+				echo Html::div_close();
+
+				echo Html::div_open( array('class'=>'dependency') );
+					echo Html::link( array('class'=>'description', 'content'=>$_LANG['PHP_MODULE'].' - GD', 'href'=>'http://www.php.net/manual/en/book.image.php', 'target'=>'_blank') );
+
+					if( in_array('gd', $php_modules) )
 					{
 						echo Html::div( array('class'=>'status_pass', 'content'=>$_LANG['PASS']) );
 					}
@@ -485,7 +634,7 @@ Date::set_timezone('UTC');
 						echo Html::input( array('name'=>'url', 'type'=>'text', 'value'=>$blog_address, 'autocomplete'=>'off') );
 
 						echo Html::label( array('content'=>$_LANG['BLOG_BASE_PATH']) );
-						echo Html::input( array('name'=>'path', 'type'=>'text', 'value'=>$blog_base_path, 'autocomplete'=>'off') );
+						echo Html::input( array('name'=>'path', 'type'=>'text', 'value'=>$base_path, 'autocomplete'=>'off') );
 
 					echo Html::div_close();
 
@@ -496,7 +645,7 @@ Date::set_timezone('UTC');
 		</section>
 
 		<footer>
-			<p><a href="http://nibbleblog.com">Nibbleblog <?php echo NIBBLEBLOG_VERSION ?> "<?php echo NIBBLEBLOG_NAME ?>"</a> | Copyright (2009 - 2013) + GPL v3 | Developed by Diego Najar | <?php echo Html::link( array('content'=>$_LANG['EXPERT_MODE'], 'href'=>'./install.php?expert=true&language='.$_GET['language']) ) ?></p>
+			<p><a href="http://nibbleblog.com">Nibbleblog <?php echo NIBBLEBLOG_VERSION ?> "<?php echo NIBBLEBLOG_NAME ?>"</a> ©2009 - 2014 | Developed by Diego Najar | <?php echo Html::link( array('content'=>$_LANG['EXPERT_MODE'], 'href'=>'./install.php?expert=true&language='.$_GET['language']) ) ?></p>
 		</footer>
 
 	</div>

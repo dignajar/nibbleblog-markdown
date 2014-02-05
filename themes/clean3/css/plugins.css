@@ -1,0 +1,55 @@
+/*
+========================================================================
+PLUGINS
+========================================================================
+*/
+
+#plugins {
+	margin: 30px auto;
+	clear:both;
+	overflow: auto;
+}
+
+div.plugin-box {
+    border-left: 1px solid #F1F1F1;
+    float: left;
+    margin: 10px 20px;
+    padding: 0 20px 0 0;
+    text-align: right;
+    width: 250px;
+    font-size: 1.3em;
+}
+
+div.plugin-box	ul {
+	margin: 0;
+	padding: 0;
+}
+
+div.plugin-box	li {
+	margin: 8px 5px;
+	padding: 0;
+	display: block;
+}
+
+/* Plugin page */
+#plugin_page {
+    border-bottom: 1px solid #F1F1F1;
+    border-top: 1px solid #F1F1F1;
+    font-size: 1.6em;
+    margin-bottom: 40px;
+    overflow: auto;
+    padding-bottom: 10px;
+    padding-top: 10px;
+}
+
+#plugin_page	ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	text-align: center;
+}
+
+#plugin_page	li {
+	display: inline-block;
+	margin: 0 10px;
+}

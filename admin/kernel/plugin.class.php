@@ -16,7 +16,6 @@ class Plugin {
 	public $author;
 	public $version;
 	public $url;
-	public $display;
 
 	public $slug_name;
 
@@ -33,13 +32,12 @@ class Plugin {
 		$reflector = new ReflectionClass(get_class($this));
 		$this->dir_name = basename(dirname($reflector->getFileName()));
 
-		$this->display = true;
 		$this->fields = array();
 
 		$this->_LANG = array();
 	}
 
-	public function install()
+	public function install($position = 0)
 	{
 		if( !mkdir(PATH_PLUGINS_DB.$this->dir_name,0777, true) )
 			return(false);
@@ -59,7 +57,7 @@ class Plugin {
 		$new_obj->addAttribute('installed_at', Date::unixstamp());
 
 		// Default fields
-		$new_obj->addChild('position', 0);
+		$new_obj->addChild('position', $position);
 		$new_obj->addChild('title', $this->name);
 
 		foreach($this->fields as $field=>$value)
@@ -75,12 +73,14 @@ class Plugin {
 
 	public function uninstall()
 	{
-		if( unlink( PATH_PLUGINS_DB.$this->dir_name.'/db.xml' ) )
-		{
-			return( rmdir( PATH_PLUGINS_DB.$this->dir_name ) );
-		}
+		$path = PATH_PLUGINS_DB.$this->dir_name;
 
-		return(false);
+		$files = Filesystem::ls($path.'/', '*', '*');
+
+		foreach($files as $file)
+			unlink($path.'/'.$file);
+
+		return rmdir($path);
 	}
 
 	public function is_installed()
@@ -100,9 +100,15 @@ class Plugin {
 		return(false);
 	}
 
+	public function database($field)
+	{
+		return $this->db->getChild($field);
+	}
+
+	// DEPRECATED
 	public function get_field_db($name)
 	{
-		return( (string) $this->db->getChild($name) );
+		return $this->database($name);
 	}
 
 	// EJ: array( 'first_name'=>'Diego', 'last_name'=>'Najar')
@@ -139,14 +145,6 @@ class Plugin {
 		$this->author = $args['author'];
 		$this->version = $args['version'];
 		$this->url = $args['url'];
-
-		if(isset($args['display']))
-			$this->display = $args['display'];
-	}
-
-	public function set_display($display)
-	{
-		$this->display = $display;
 	}
 
 	public function get_name()
@@ -179,26 +177,12 @@ class Plugin {
 		return( $this->dir_name );
 	}
 
-	public function display()
-	{
-		return( $this->display );
-	}
-
-	public function get_html_config()
-	{
-		return(false);
-	}
-
-	public function get_html()
-	{
-		return(false);
-	}
-
 	public function set_lang($array)
 	{
 		$this->_LANG = $array;
 	}
 
+	// DEPRECATED
 	public function language($key)
 	{
 		if(isset($this->_LANG[$key]))
@@ -207,6 +191,36 @@ class Plugin {
 		}
 
 		return('');
+	}
+
+	public function boot()
+	{
+		return false;
+	}
+
+	public function blog_head()
+	{
+		return false;
+	}
+
+	public function blog_body()
+	{
+		return false;
+	}
+
+	public function dashboard_head()
+	{
+		return false;
+	}
+
+	public function dashboard_body()
+	{
+		return false;
+	}
+
+	public function dashboard_config()
+	{
+		return false;
 	}
 
 }

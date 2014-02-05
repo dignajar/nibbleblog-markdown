@@ -1,8 +1,7 @@
-<?php
-header("Content-Type: text/xml");
+<?php header("Content-Type: text/xml");
 
 require('../boot/ajax.bit');
-require('../kernel/security.bit');
+require('security.bit');
 
 if( $_POST['action']=='delete' )
 {
@@ -11,8 +10,12 @@ if( $_POST['action']=='delete' )
 	// Delete all comments from a post
 	$_DB_COMMENTS->delete_all_by_post( array('id_post'=>$safe['id']) );
 
+	// Delete links to tags
+	$_DB_TAGS->delete_links(array('id_post'=>$safe['id']));
+	$_DB_TAGS->savetofile();
+
 	// Delete the post
-	$error = !$_DB_POST->remove($safe);
+	$error = !$_DB_POST->delete($safe);
 }
 
 if($error)

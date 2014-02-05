@@ -123,7 +123,7 @@ class Text {
 	public static function clean_url($text, $spaces='-', $translit=false)
 	{
 		// Delete characters
-		$text = str_replace(array("!", "*", "&#039;", "&quot;", "(", ")", ";", ":", "@", "&amp", "=", "+", "$", ",", "/", "?", "%", "#", "[", "]", "|"),'',$text);
+		$text = str_replace(array("“", "”", "!", "*", "&#039;", "&quot;", "(", ")", ";", ":", "@", "&amp", "=", "+", "$", ",", "/", "?", "%", "#", "[", "]", "|"),'',$text);
 
 		// Translit
 		if($translit!=false)
@@ -131,13 +131,24 @@ class Text {
 			$text = str_replace(array_keys($translit),array_values($translit),$text);
 		}
 
-		// Reemplace spaces by $spaces
+		// Replace spaces by $spaces
 		$text = str_replace(' ',$spaces,$text);
 
+		// Replace double -- by -
+		$text = str_replace(array('---','--'),'-',$text);
+
 		// Make a string lowercase
-		$text = strtolower($text);
+		$text = self::str2lower($text);
 
 		return $text;
+	}
+
+	public static function str2lower($string)
+	{
+		if(function_exists('mb_strtolower'))
+			return mb_strtolower($string, 'UTF-8');
+
+		return strtolower($string);
 	}
 
 	public static function random_text($length)
@@ -149,6 +160,11 @@ class Text {
 			$text .= $characteres{rand(0,41)};
 		 }
 		 return $text;
+	}
+
+	public static function replace_assoc(array $replace, $text)
+	{
+		return str_replace(array_keys($replace), array_values($replace), $text);
 	}
 
 }

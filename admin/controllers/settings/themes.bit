@@ -1,19 +1,41 @@
 <?php
 
 // ============================================================================
-//	POST
+//	GET
 // ============================================================================
+if( $_SERVER['REQUEST_METHOD'] == 'GET' )
+{
+	if(!empty($_GET['other']))
+	{
+		$_DB_SETTINGS->set(array('theme'=>$_GET['other']));
+
+		$_DB_SETTINGS->savetofile();
+
+		Session::set_alert($_LANG['CHANGES_HAS_BEEN_SAVED_SUCCESSFULLY']);
+
+		Redirect::controller('admin', 'settings', 'themes');
+	}
+}
 
 // ============================================================================
 //	VARIABLES
 // ============================================================================
 
-	$themes = $_DB_SETTINGS->get_themes();
+$theme_dirs = $_DB_SETTINGS->get_themes();
 
-	foreach($themes as $dir)
+$theme_list = array();
+
+foreach($theme_dirs as $dir)
+{
+	include(PATH_THEMES.$dir.'/config.bit');
+
+	if(isset($theme))
 	{
-		include(PATH_THEMES.$dir.'/config.bit');
-		$themes_html[$dir] = $theme['name'];
+		$theme['dir'] = $dir;
+		array_push($theme_list, $theme);
 	}
+
+	$themes_html[$dir]=$theme['name'];
+}
 
 ?>

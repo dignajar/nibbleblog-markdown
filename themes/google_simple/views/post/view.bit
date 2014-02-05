@@ -1,18 +1,23 @@
 <?php
 
-$post = $posts[0];
+// Post template
+include('includes/post.bit');
 
-echo '<article class="post">';
-
-	include('includes/post_view.bit');
-
-	if($post['allow_comments'])
+// If post allow comments
+if(Post::allow_comments())
+{
+	if( !empty($theme['disqus_account']) )
 	{
-		include('includes/comment_list.bit');
-
-		include('includes/comment_form.bit');
+		include('includes/disqus_comments.bit');
 	}
-
-echo '</article>';
+	elseif( !empty($theme['facebook_appId']) )
+	{
+		include('includes/facebook_comments.bit');
+	}
+	else
+	{
+		include('includes/nibbleblog_comments.bit');
+	}
+}
 
 ?>

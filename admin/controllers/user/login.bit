@@ -4,7 +4,7 @@
 //	CONTROLLER
 // ============================================================================
 
-if( $Login->is_logued() || $Login->remember_me() )
+if( $Login->is_logged() || $Login->remember_me() )
 	Redirect::controller('admin','dashboard','view');
 
 // ============================================================================
@@ -13,35 +13,29 @@ if( $Login->is_logued() || $Login->remember_me() )
 
 if( $_SERVER['REQUEST_METHOD'] == 'POST' )
 {
-	if(defined(LOGIN_SLEEP))
-		sleep(LOGIN_SLEEP);
-	else
-		sleep(5);
-
 	$safe = array();
 	$safe['username'] = Validation::sanitize_html($_POST['username']);
 	$safe['password'] = Validation::sanitize_html($_POST['password']);
 
 	$Login->verify_login( array('username'=>$safe['username'], 'password'=>$safe['password']) );
 
-	if( $Login->is_logued() )
+	if( $Login->is_logged() )
 	{
 		// Check remember me
 		if( isset($_POST['remember']) && $_POST['remember']=='1' )
 			$Login->set_remember_me();
 
 		// Notification - Session started
-		$_DB_NOTIFICATIONS->add('session_start', $settings['notification_session_start'], 'NEW_SESSION_STARTED');
+		$_DB_NOTIFICATIONS->add('session_start', $settings['notification_session_start'], array('username'=>$safe['username']));
 
 		// Redirect to Dashboard
 		Redirect::controller('admin','dashboard','view');
 	}
 
 	// Notification - Session failed
-	$_DB_NOTIFICATIONS->add('session_fail', $settings['notification_session_fail'], 'LOGIN_FAILED_ATTEMPT');
+	$_DB_NOTIFICATIONS->add('session_fail', $settings['notification_session_fail'], array('username'=>$safe['username'], 'password'=>$safe['password']));
 
-	$_SESSION['session_alert']['msg'] = $_LANG['INCORRECT_USERNAME_OR_PASSWORD'];
-	$_SESSION['session_alert']['active'] = true;
+	Session::set_alert($_LANG['INCORRECT_USERNAME_OR_PASSWORD'].'. <a href="'.HTML_PATH_ROOT.'admin.php?controller=user&action=send_forgot">'.$_LANG['FORGOT_PASSWORD'].'</a>');
 }
 
 ?>

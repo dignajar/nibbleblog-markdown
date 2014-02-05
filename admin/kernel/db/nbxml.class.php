@@ -11,19 +11,38 @@
 
 class NBXML extends SimpleXMLElement
 {
+	// Private keys = array('username'=>'diego');
+	public function addGodChild($name, $private_key)
+	{
+		$name = utf8_encode($name);
+
+		// Add and scape &
+		$node = parent::addChild($name);
+		$node[0] = ''; // (BUG) Con esta forma escapamos el & que no escapa el addChild
+
+		foreach($private_key as $name=>$value)
+			$node->addAttribute($name, $value);
+
+		return $node;
+	}
+
 	public function addChild($name, $value='', $namespace='')
 	{
-		//$type	= gettype($value);
+		// Get type of the value will be insert
+		$type	= gettype($value);
+
+		// Encode to UTF8
 		$name	= utf8_encode($name);
 		$value	= utf8_encode($value);
 
+		// Add and scape &
 		$node = parent::addChild($name);
 		$node[0] = $value; // (BUG) Con esta forma escapamos el & que no escapa el addChild
 
 		// Add type
-		//$node->addAttribute('type', $type);
+		$node->addAttribute('type', $type);
 
-      return $node;
+		return $node;
 	}
 
 	public function addAttribute($name, $value='', $namespace='')
@@ -41,12 +60,18 @@ class NBXML extends SimpleXMLElement
 
 	public function setChild($name, $value)
 	{
-		$this->{$name} = utf8_encode($value);
+		if(isset($this->{$name}))
+			$this->{$name} = utf8_encode($value);
+
+		return false;
 	}
 
 	public function getChild($name)
 	{
-		return( utf8_decode((string)$this->{$name}) );
+		$type = @$this->{$name}->getAttribute('type');
+		$value = utf8_decode((string)$this->{$name});
+
+		return empty($type) ? $value : $this->cast($type, $value);
 	}
 
 	public function is_set($name)

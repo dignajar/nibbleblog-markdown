@@ -9,62 +9,25 @@
  * See COPYRIGHT.txt and LICENSE.txt.
 */
 
-// =====================================================================
-//	BOOT
-// =====================================================================
+// Check installation
 if( !file_exists('content/private') )
 {
 	header('Location:install.php');
 	exit('<a href="./install.php">click to install Nibbleblog</a>');
 }
 
+// Boot
 require('admin/boot/blog.bit');
 
-// =====================================================================
-//	THEME CONFIG
-// =====================================================================
-require(THEME_ROOT.'config.bit');
+// Plugins
+foreach($plugins as $plugin)
+	$plugin->boot();
 
-// =====================================================================
-//	CONTROLLER & ACTION
-// =====================================================================
-$layout = array(
-	'controller'=>'blog/view.bit',
-	'view'=>'blog/view.bit',
-	'template'=>'default.bit',
-	'title'=>$seo['site_title'],
-	'description'=>$seo['site_description'],
-	'author'=>$seo['author'],
-	'keywords'=>$seo['keywords'],
-	'generator'=>'Nibbleblog',
-	'feed'=>HTML_PATH_ROOT.'feed.php'
-);
+// Load the controller if set
+if(file_exists(THEME_CONTROLLERS.$layout['controller']))
+	require(THEME_CONTROLLERS.$layout['controller']);
 
-if( ($url['controller']!=null) && ($url['action']!=null) )
-{
-	$layout['controller']	= $url['controller'].'/'.$url['action'].'.bit';
-	$layout['view']			= $url['controller'].'/'.$url['action'].'.bit';
-
-	// 404 ?
-	if( !file_exists(THEME_CONTROLLERS.$layout['controller']) || !file_exists(THEME_VIEWS.$layout['view']) || $page_not_found )
-	{
-		$layout['controller']	= 'page/404.bit';
-		$layout['view']			= 'page/404.bit';
-	}
-}
-
-if(isset($theme['template'][$url['controller']]))
-{
-	$layout['template'] = $theme['template'][$url['controller']];
-}
-
-if($settings['friendly_urls'])
-{
-	$layout['feed'] = HTML_PATH_ROOT.'feed/';
-}
-
-// Load the controller and template
-@require(THEME_CONTROLLERS.$layout['controller']);
-@require(THEME_TEMPLATES.$layout['template']);
+// Load the template and view
+require(THEME_TEMPLATES.$layout['template']);
 
 ?>

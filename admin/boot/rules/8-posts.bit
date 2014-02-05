@@ -17,89 +17,164 @@
  * (boolean) $page_not_found
 */
 
-	$posts = array();
-	$post = array();
-	$page_not_found = false;
+$page_not_found = false;
 
-	// ---- POSTS FILTER BY CATEGORY
-	if($url['category']!==null)
+// =====================================================================
+// PAGES
+// =====================================================================
+$page = array();
+$pages = $_DB_PAGES->get_all();
+
+// Filter by page
+if( ($url['id_page']!==null) || ($url['page']!==null) )
+{
+	if($url['id_page']!==null)
+		$args = array('id'=>$url['id_page']);
+	else
+		$args = array('slug'=>$url['page']);
+
+	// Get post
+	$tmp = $_DB_PAGES->get($args);
+
+	if($tmp===false)
+		$page_not_found = true;
+	else
+		$page = $tmp;
+}
+
+// DEPRECATED
+if(!empty($page))
+	array_push($pages, $page);
+
+// ---- PERMALINKS
+// ---- PUBLISH DATE
+foreach($pages as $key=>$value)
+{
+	// DEPRECATED -> Moved to page helper
+	// Publish date
+	$pages[$key]['pub_date'] = Date::format($pages[$key]['pub_date_unix'], $settings['timestamp_format']);
+	$pages[$key]['mod_date'] = Date::format($pages[$key]['mod_date_unix'], $settings['timestamp_format']);
+
+	// DEPRECATED -> Moved to page helper
+	// Permalink
+	$pages[$key]['permalink'] = Url::page($pages[$key]);
+}
+
+// DEPRECATED
+if(!empty($page))
+	$page = array_pop($pages);
+
+// =====================================================================
+// POSTS
+// =====================================================================
+$post = array();
+$posts = array();
+$category = array();
+$tag = array();
+
+// ---- POSTS FILTER BY CATEGORY
+if($url['category']!==null)
+{
+	// Get the category ID
+	$category = $_DB_CATEGORIES->get_by_slug( array('slug'=>$url['category']) );
+
+	if($category!==false)
 	{
-		// Get the category ID
-		$category = $_DB_CATEGORIES->get_by_slug( array('slug'=>$url['category']) );
-
-		if($category!==false)
-		{
-			// Posts by category
-			$posts = $_DB_POST->get_list_by_category( array('page'=>$url['page'], 'amount'=>$settings['items_page'], 'id_cat'=>$category['id']) );
-		}
-		else
-		{
-			$page_not_found = true;
-		}
+		// Posts by category
+		$posts = $_DB_POST->get_list_by_category( array('page'=>$url['number'], 'amount'=>$settings['items_page'], 'id_cat'=>$category['id']) );
 	}
-	// ---- PARTICULAR POST
-	elseif($url['id_post']!==null)
-	{
-		// Get post
-		$tmp = $_DB_POST->get( array('id'=>$url['id_post']) );
-
-		if( $tmp!==false )
-		{
-			$posts[0] = $tmp;
-		}
-		else
-		{
-			$page_not_found = true;
-		}
-	}
-	// ---- POSTS FILTER BY BLOG
 	else
 	{
-		// Posts by page
-		$posts = $_DB_POST->get_list_by_page( array('page'=>$url['page'], 'amount'=>$settings['items_page']) );
+		$page_not_found = true;
 	}
+}
+// ---- POSTS FILTER BY TAG
+elseif($url['tag']!==null)
+{
+	// Get IDs posts linked with the tag
+	$id_posts = $_DB_TAGS->get_all_posts(array('name'=>$url['tag']));
 
-	// ---- COMMENTS
-	// ---- PERMALINKS
-	// ---- CATEGORY
-	// ---- PUBLISH DATE
-	foreach($posts as $key=>$value)
+	if($id_posts!==false)
 	{
-		// Comments
-		$posts[$key]['comments'] = $_DB_COMMENTS->get_list_by_post( array('id_post'=>$value['id']) );
+		$tag = $url['tag'];
 
-		// Category
-		$category = $_DB_CATEGORIES->get( array('id'=>$posts[$key]['id_cat']) );
-		$posts[$key]['category'] = $category['name'];
+		arsort($id_posts);
 
-		// Publish date
-		$posts[$key]['pub_date'] = Date::format($posts[$key]['pub_date_unix'], $settings['timestamp_format']);
-		$posts[$key]['mod_date'] = Date::format($posts[$key]['mod_date_unix'], $settings['timestamp_format']);
-
-		// Permalink
-		if( $settings['friendly_urls'] )
+		foreach($id_posts as $id)
 		{
-			if(  Text::not_empty($posts[$key]['slug']) )
-				$slug = $posts[$key]['slug'];
-			elseif( Text::not_empty($posts[$key]['title']) )
-				$slug = Text::clean_url($posts[$key]['title'], '-', isset($_LANG['TRANSLIT'])?$_LANG['TRANSLIT']:false);
-			else
-				$slug = $posts[$key]['type'];
-
-			$posts[$key]['permalink'] = HTML_PATH_ROOT.'post-'.$posts[$key]['id'].'/'.$slug;
+			array_push($posts, $_DB_POST->get( array('id'=>$id) ));
 		}
 	}
-
-	if(isset($posts[0]))
+	else
 	{
-		$post = $posts[0];
+		$page_not_found = true;
 	}
+
+}
+// ---- PARTICULAR POST
+elseif( ($url['id_post']!==null) || ($url['post']!==null) )
+{
+	if($url['id_post']!==null)
+		$args = array('id'=>$url['id_post']);
+	else
+		$args = array('slug'=>$url['post']);
+
+	// Get post
+	$tmp = $_DB_POST->get($args);
+
+	if($tmp===false)
+		$page_not_found = true;
+	else
+		$posts[0] = $tmp;
+}
+// ---- POSTS FILTER BY BLOG
+else
+{
+	// Posts by page
+	$posts = $_DB_POST->get_list_by_page( array('page'=>$url['number'], 'amount'=>$settings['items_page']) );
+}
+
+
+// ---- COMMENTS
+// ---- PERMALINKS
+// ---- CATEGORY
+// ---- PUBLISH DATE
+// ---- TAGS
+foreach($posts as $key=>$value)
+{
+	// DEPRECATED -> Moved to post helper
+	// Tags
+	$posts[$key]['tags'] = $_DB_TAGS->get_by_idpost( array('id_post'=>$value['id']) );
+
+	// DEPRECATED -> Moved to post helper
+	// Comments
+	$posts[$key]['comments'] = $_DB_COMMENTS->get_list_by_post( array('id_post'=>$value['id']) );
+
+	// DEPRECATED -> Moved to post helper
+	// Category
+	$category = $_DB_CATEGORIES->get( array('id'=>$posts[$key]['id_cat']) );
+	$posts[$key]['category'] = $category['name'];
+
+	// DEPRECATED -> Moved to post helper
+	// Publish date
+	$posts[$key]['pub_date'] = Date::format($posts[$key]['pub_date_unix'], $settings['timestamp_format']);
+	$posts[$key]['mod_date'] = Date::format($posts[$key]['mod_date_unix'], $settings['timestamp_format']);
+
+	// DEPRECATED -> Moved to post helper
+	// Permalink
+	$posts[$key]['permalink'] = Url::post($posts[$key]);
+}
+
+if(isset($posts[0]))
+{
+	$post = $posts[0];
+}
 
 // =====================================================================
 // CLEANING
 // =====================================================================
-	unset($id_cat);
-	unset($tmp);
-	unset($slug);
-	unset($category);
+unset($id_cat);
+unset($tmp);
+unset($slug);
+
 ?>
