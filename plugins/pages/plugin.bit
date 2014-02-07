@@ -27,7 +27,7 @@ class PLUGIN_PAGES extends Plugin
 		foreach($pages as $page)
 		{
 			if($settings['default_homepage']!=$page['id'])
-				$html .= '<li><a href="'.$page['permalink'].'">'.$page['title'].'</a></li>';
+				$html .= '<li><a href="'.Url::page($page).'">'.$page['title'].'</a></li>';
 		}
 
 		$html .= '</ul>';

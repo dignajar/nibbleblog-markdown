@@ -1,3 +1,4 @@
-content/*
-*.espressostorage
-*.esproj
+.htaccess
+content/tmp/*
+content/public/*
+content/private/*
