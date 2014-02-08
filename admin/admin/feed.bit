@@ -10,5 +10,7 @@ require_once('rules/5-regional.bit');
 
 require_once('rules/8-posts_feed.bit');
 
+require_once('rules/15-markdown.bit');
+
 require_once('rules/99-misc.bit');
 ?>

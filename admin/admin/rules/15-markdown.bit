@@ -1,0 +1,64 @@
+<?php
+/*
+ * Nibbleblog
+ * http://www.nibbleblog.com
+
+ * Require
+ * $post
+ * $posts
+
+ * Return
+ * (array) $post
+ * (array) $posts
+*/
+
+require(PATH_KERNEL.'markdown.php');
+
+use \Michelf\MarkdownExtra;
+
+function mark4post($post)
+{
+	// Full content
+	$post['content'][0] = MarkdownExtra::defaultTransform($post['content'][0]);
+
+	// Pagebrake
+	$post['content'][1] = MarkdownExtra::defaultTransform($post['content'][1]);
+
+	return $post;
+}
+
+function mark4page($page)
+{
+	$page['content'] = MarkdownExtra::defaultTransform($page['content']);
+
+	return $page;
+}
+
+// Pages
+if(!empty($page))
+	array_push($pages, $page);
+
+$tmp = array();
+foreach($pages as $page_tmp)
+{
+	array_push($tmp, mark4page($page_tmp));
+}
+$pages = $tmp;
+
+if(!empty($page))
+	$page = array_pop($pages);
+
+// Posts
+$tmp = array();
+foreach($posts as $post)
+{
+	array_push($tmp, mark4post($post));
+}
+$posts = $tmp;
+
+if(isset($posts[0]))
+{
+	$post = $posts[0];
+}
+
+?>
