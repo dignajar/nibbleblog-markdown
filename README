@@ -1,7 +1,7 @@
 ====== Nibbleblog ======
-Version: Beta on Github
-Codename:
-Release date:
+Version: 4.0.1 + Markdown
+Codename: Coffee
+Release date: 14/02/2014
 
 Site: http://www.nibbleblog.com
 Blog: http://blog.nibbleblog.com
@@ -13,46 +13,26 @@ Documentation: http://docs.nibbleblog.com
 * Facebook: http://www.facebook.com/nibbleblog
 * Google+: http://google.com/+nibbleblog
 
-===== Intallation =====
-1. Unzip the downloaded file
-2. Upload all files on your hosting or local server via FTP, Shell, Cpanel, others.
-3. With your browser, go to the URL of your web. Example: www.domain.com
-4. Complete the form
-5. Done! you have installed Nibbleblog
-
 ===== System Requirements =====
 * PHP v5.2 or higher
 * PHP module - DOM
 * PHP module - SimpleXML
-* Directory "content" writable by PHP
+* PHP module - GD
+* Directory “content” writable by Apache/PHP
+
+Optionals requirements
+
+* PHP module - Mcrypt
+
+===== Installation guide =====
+1- Download the last version from http://nibbleblog.com
+2- Unzip the downloaded file
+3- Upload all files to your hosting or local server via FTP, Shell, Cpanel, others.
+4- With your browser, go to the URL of your web. Example: www.domain-name.com
+5- Complete the form
+6- Done! you have installed Nibbleblog
 
 ===== About the author =====
 Name: Diego Najar
 E-mail: dignajar@gmail.com
 Linkedin: http://www.linkedin.com/in/dignajar
-
-===== Changelog Nibbleblog Nightly Builds =====
-* CSS -> class img.align_left renamed to .nb-align-left
-* CSS -> class img.align_right renamed to .nb-align-right
-* CSS -> class pre.console renamed to .nb-console
-* New Helpers for developers
-* New Helpers for themes
-* Dashboard->Themes List changes
-* Image quality - http://forum.nibbleblog.com/viewtopic.php?pid=2390
-* Blacklist system
-* Set a page as default page
-* Gif images are not resize after upload
-* New dashboard
-* Fix on Nb Media
-* Username for Disqus and Facebook commments now on settings
-* Fix for Safari browser
-* Plugin last post renamed to latest post
-* Nibbleblog Code for TinyMCE
-
-===== Deprecated features for version 4.1 =====
-File: /admin/kernel/api/comment.class.php
-$Comment->get_hash() replaced for $Comment->form('hash')
-$Comment->set_hash() replaced for $Comment->set_form('hash', 'value')
-
-File: /admin/boot/rules/8-posts.bit
-
